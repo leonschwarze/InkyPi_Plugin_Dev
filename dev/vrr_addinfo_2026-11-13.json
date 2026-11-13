@@ -1,0 +1,1438 @@
+{
+ "serverInfo": {},
+ "version": "11.0.6.72",
+ "timestamp": "2026-11-13T09:31:30Z",
+ "note": "Auszug aus der echten Antwort der VRR-Auskunft (XML_ADDINFO_REQUEST) vom 13.11.2026, 10:31 Uhr",
+ "infos": {
+  "current": [
+   {
+    "type": "lineInfo",
+    "id": "313278",
+    "version": 2,
+    "priority": "normal",
+    "timestamps": {
+     "creation": "2026-10-20T08:08:00Z",
+     "availability": {
+      "from": "2026-10-04T22:43:59Z",
+      "to": "2026-11-21T03:00:59Z"
+     },
+     "validity": [
+      {
+       "from": "2026-10-10T02:00:59Z",
+       "to": "2026-11-21T03:00:59Z"
+      }
+     ],
+     "expiration": "2026-11-21T03:00:59Z"
+    },
+    "infoLinks": [
+     {
+      "urlText": "",
+      "url": "http://www.rheinbahn.de/Seiten/MeldungsDetail.aspx?Nr=313278",
+      "content": "<a href=\"https://www.rheinbahn.de/Barrierefreier_Ausbau_Flingern_S\">Hier alle Infos</a>",
+      "subtitle": "Barrierefreier Ausbau der Haltestelle \"Flingern S, Steig 3\"",
+      "title": "Straßenbahnlinie 709:",
+      "smsText": "Hier alle Infos"
+     }
+    ],
+    "properties": {
+     "wmlText": "Hier alle Infos",
+     "source": {
+      "id": "RBG",
+      "name": "CMSVRR",
+      "type": "CMS"
+     },
+     "incidentDateTime": "10/10/2026 04:00 - 21/11/2026 04:00",
+     "providerCode": "Rheinbahn"
+    },
+    "affected": {
+     "lines": [
+      {
+       "id": "rbg:72834: :H:",
+       "destination": {
+        "name": "Düsseldorf Hbf",
+        "type": "stop"
+       },
+       "name": "Niederflurbus 834",
+       "number": "834",
+       "description": "D-Theodor-Heuss-Brücke - Nordfriedhof - Mörsenbroich - Düsseldorf Hbf",
+       "product": {
+        "id": 13,
+        "class": 5,
+        "iconId": 5
+       },
+       "operator": {
+        "id": "70",
+        "name": "Rheinbahn"
+       }
+      },
+      {
+       "id": "rbg:72834: :R:",
+       "destination": {
+        "name": "D-Theodor-Heuss-Brücke",
+        "type": "stop"
+       },
+       "name": "Niederflurbus 834",
+       "number": "834",
+       "description": "Düsseldorf Hbf - Mörsenbroich - Nordfriedhof - D-Theodor-Heuss-Brücke",
+       "product": {
+        "id": 13,
+        "class": 5,
+        "iconId": 5
+       },
+       "operator": {
+        "id": "70",
+        "name": "Rheinbahn"
+       }
+      },
+      {
+       "id": "rbg:71708: :H:",
+       "destination": {
+        "name": "D-Polizeipräsidium",
+        "type": "stop"
+       },
+       "name": "Niederflurstrab 708",
+       "number": "708",
+       "description": "D-Mörsenbroich, Heinrichstraße - Brehmplatz - Düsseldorf Hbf - D-Polizeipräsidium",
+       "product": {
+        "id": 18,
+        "class": 4,
+        "iconId": 4
+       },
+       "operator": {
+        "id": "70",
+        "name": "Rheinbahn"
+       }
+      },
+      {
+       "id": "rbg:71708: :R:",
+       "destination": {
+        "name": "Düsseldorf Hbf",
+        "type": "stop"
+       },
+       "name": "Niederflurstrab 708",
+       "number": "708",
+       "description": "D-Polizeipräsidium - Düsseldorf Hbf - Brehmplatz - D-Mörsenbroich, Heinrichstraße",
+       "product": {
+        "id": 18,
+        "class": 4,
+        "iconId": 4
+       },
+       "operator": {
+        "id": "70",
+        "name": "Rheinbahn"
+       }
+      },
+      {
+       "id": "rbg:71709: :H:",
+       "destination": {
+        "name": "Neuss Theodor-Heuss-Platz",
+        "type": "stop"
+       },
+       "name": "Niederflurstrab 709",
+       "number": "709",
+       "description": "D-Gerresheim, Krankenhaus - Grafenberg - Düsseldorf Hbf - NE-Stadthalle - Neuss Hbf - NE-Theodor-Heuss-Platz",
+       "product": {
+        "id": 18,
+        "class": 4,
+        "iconId": 4
+       },
+       "operator": {
+        "id": "70",
+        "name": "Rheinbahn"
+       }
+      },
+      {
+       "id": "rbg:71709: :R:",
+       "destination": {
+        "name": "D-G'heim, Krankenhaus",
+        "type": "stop"
+       },
+       "name": "Niederflurstrab 709",
+       "number": "709",
+       "description": "NE-Theodor-Heuss-Platz - Neuss Hbf - NE-Stadthalle - Düsseldorf Hbf - Grafenberg - D-Gerresheim, Krankenhaus",
+       "product": {
+        "id": 18,
+        "class": 4,
+        "iconId": 4
+       },
+       "operator": {
+        "id": "70",
+        "name": "Rheinbahn"
+       }
+      }
+     ]
+    }
+   },
+   {
+    "type": "tripMessage",
+    "id": "ZTP-PROD-137395",
+    "version": 810,
+    "priority": "normal",
+    "timestamps": {
+     "creation": "2026-08-18T06:30:00Z",
+     "availability": {
+      "from": "2026-08-31T22:00:00Z",
+      "to": "2026-12-04T19:00:00Z"
+     },
+     "validity": [
+      {
+       "from": "2026-08-31T22:00:00Z",
+       "to": "2026-12-04T19:00:00Z"
+      }
+     ],
+     "expiration": "2026-12-04T19:00:59Z"
+    },
+    "infoLinks": [
+     {
+      "urlText": "",
+      "url": "http://ems.vrr.de/info-link/97416f0e-d154-52c3-a739-2b437f05897c",
+      "content": "Aufgrund von Brückenarbeiten, Gleis- und Weichenerneuerungen sowie Bahnsteigarbeiten kommt es auf der Linie RE 5 (RRX) vom 21.08.2026 (21:00 Uhr) bis zum 04.12.2026 (21:00 Uhr) zu Umleitungen und Teilausfällen zwischen Düsseldorf Hbf und Köln-Mülheim.",
+      "subtitle": "Maßnahmen und Fahrpläne: RE 5 (RRX)",
+      "title": "Maßnahmen und Fahrpläne: RE 5 (RRX)"
+     }
+    ],
+    "properties": {
+     "source": {
+      "id": "VRR-EMS-LIVE",
+      "name": "VRR-EMS-LIVE",
+      "type": "MENTZ-EMS v2"
+     },
+     "producerRef": "VRR",
+     "deviceRef": "1439f847f8ab4864a994413edb1dd4bd",
+     "messageRef": "97416f0e-d154-52c3-a739-2b437f05897c",
+     "eventRef": "4cae7c1737b3640627d6a304db28ee8b",
+     "AlertCause": "unknown",
+     "publisher": "ems.comm.addinfo",
+     "incidentDateTime": "01/09/2026 00:00 - 04/12/2026 20:00",
+     "providerCode": "ZTP-PROD"
+    },
+    "affected": {
+     "lines": [
+      {
+       "id": "ddb:90RE5: :R:",
+       "destination": {
+        "name": "Remagen Bahnhof",
+        "type": "stop"
+       },
+       "name": "Regionalzug RE5",
+       "number": "RE5",
+       "product": {
+        "id": 8,
+        "class": 13,
+        "iconId": 6
+       },
+       "operator": {
+        "id": "NX",
+        "name": "National Express"
+       }
+      },
+      {
+       "id": "ddb:90RE5: :H:",
+       "destination": {
+        "name": "Oberhausen Hbf",
+        "type": "stop"
+       },
+       "name": "Regionalzug RE5",
+       "number": "RE5",
+       "product": {
+        "id": 8,
+        "class": 13,
+        "iconId": 6
+       },
+       "operator": {
+        "id": "NX",
+        "name": "National Express"
+       }
+      }
+     ]
+    }
+   },
+   {
+    "type": "tripMessage",
+    "id": "ZTP-PROD-140701",
+    "version": 435,
+    "priority": "normal",
+    "timestamps": {
+     "creation": "2026-11-03T09:28:00Z",
+     "availability": {
+      "from": "2026-11-03T09:22:00Z",
+      "to": "2026-11-16T02:00:00Z"
+     },
+     "validity": [
+      {
+       "from": "2026-11-03T09:22:00Z",
+       "to": "2026-11-16T02:00:00Z"
+      }
+     ],
+     "expiration": "2026-11-16T02:00:59Z"
+    },
+    "infoLinks": [
+     {
+      "urlText": "",
+      "url": "http://ems.vrr.de/info-link/f7f54b63-21bd-5a02-82fb-f09aa9b2d807",
+      "content": "Strecke zw. Duisburg-Rahm und Düsseldorf Flughafen beeinträchtigt. Das Ende können wir leider noch nicht abschätzen. Grund: Reparatur an der Strecke. Die Züge fahren im betroffenen Bereich langsamer. Es kommt zu Verspätungen und Teilausfällen.",
+      "subtitle": "Strecke zw. Duisburg-Rahm und Düsseldorf Flughafen beeinträchtigt - Reparatur an der Strecke",
+      "title": "Strecke zw. Duisburg-Rahm und Düsseldorf Flughafen beeinträchtigt - Reparatur an der Strecke"
+     }
+    ],
+    "properties": {
+     "source": {
+      "id": "VRR-EMS-LIVE",
+      "name": "VRR-EMS-LIVE",
+      "type": "MENTZ-EMS v2"
+     },
+     "producerRef": "VRR",
+     "deviceRef": "1439f847f8ab4864a994413edb1dd4bd",
+     "messageRef": "f7f54b63-21bd-5a02-82fb-f09aa9b2d807",
+     "eventRef": "4d55f05dde6517e3ae0d4a0fa140a91f",
+     "AlertCause": "unknown",
+     "publisher": "ems.comm.addinfo",
+     "incidentDateTime": "03/11/2026 10:22 - 16/11/2026 03:00",
+     "providerCode": "ZTP-PROD"
+    },
+    "affected": {
+     "lines": [
+      {
+       "id": "ddb:920S1:C:H:",
+       "destination": {
+        "name": "Essen Hauptbahnhof",
+        "type": "stop"
+       },
+       "name": "S-Bahn S1",
+       "number": "S1",
+       "product": {
+        "id": 3,
+        "class": 1,
+        "iconId": 2
+       },
+       "operator": {
+        "id": "8003",
+        "name": "DB Regio AG NRW"
+       }
+      },
+      {
+       "id": "ddb:920S1:C:R:",
+       "destination": {
+        "name": "Essen Hauptbahnhof",
+        "type": "stop"
+       },
+       "name": "S-Bahn S1",
+       "number": "S1",
+       "product": {
+        "id": 3,
+        "class": 1,
+        "iconId": 2
+       },
+       "operator": {
+        "id": "8003",
+        "name": "DB Regio AG NRW"
+       }
+      },
+      {
+       "id": "ddb:90RE2: :R:",
+       "destination": {
+        "name": "Osnabrück Hbf",
+        "type": "stop"
+       },
+       "name": "Regionalzug RE2",
+       "number": "RE2",
+       "product": {
+        "id": 8,
+        "class": 13,
+        "iconId": 6
+       },
+       "operator": {
+        "id": "8003",
+        "name": "DB Regio AG NRW"
+       }
+      },
+      {
+       "id": "ddb:90RE2: :H:",
+       "destination": {
+        "name": "Essen Hauptbahnhof",
+        "type": "stop"
+       },
+       "name": "Regionalzug RE2",
+       "number": "RE2",
+       "product": {
+        "id": 8,
+        "class": 13,
+        "iconId": 6
+       },
+       "operator": {
+        "id": "8003",
+        "name": "DB Regio AG NRW"
+       }
+      }
+     ]
+    }
+   },
+   {
+    "type": "tripMessage",
+    "id": "ZTP-PROD-141140",
+    "version": 1,
+    "priority": "normal",
+    "timestamps": {
+     "creation": "2026-11-13T08:35:00Z",
+     "availability": {
+      "from": "2026-11-13T08:31:00Z",
+      "to": "2026-11-13T11:00:00Z"
+     },
+     "validity": [
+      {
+       "from": "2026-11-13T08:32:00Z",
+       "to": "2026-11-13T11:00:00Z"
+      }
+     ],
+     "expiration": "2026-11-13T11:00:59Z"
+    },
+    "infoLinks": [
+     {
+      "urlText": "",
+      "url": "http://ems.vrr.de/info-link/3b7d2f2b-ec23-53d5-ba1f-03b65e43597e",
+      "content": "Strecke zw. Werl und Soest beeinträchtigt. Das Ende können wir leider noch nicht abschätzen. Grund: Reparatur an einem Signal. In der Folge kommt es jetzt zu Verspätungen. Bitte Reiseverbindung vor Abfahrt prüfen.",
+      "subtitle": "Strecke zw. Werl und Soest beeinträchtigt - Reparatur an einem Signal",
+      "title": "Strecke zw. Werl und Soest beeinträchtigt - Reparatur an einem Signal"
+     }
+    ],
+    "properties": {
+     "source": {
+      "id": "VRR-EMS-LIVE",
+      "name": "VRR-EMS-LIVE",
+      "type": "MENTZ-EMS v2"
+     },
+     "producerRef": "VRR",
+     "deviceRef": "1439f847f8ab4864a994413edb1dd4bd",
+     "messageRef": "3b7d2f2b-ec23-53d5-ba1f-03b65e43597e",
+     "eventRef": "20a78a52830d4cfd0763a444006aef09",
+     "AlertCause": "unknown",
+     "publisher": "ems.comm.addinfo",
+     "incidentDateTime": "13/11/2026 09:32 - 13/11/2026 12:00",
+     "providerCode": "ZTP-PROD"
+    },
+    "affected": {
+     "lines": [
+      {
+       "id": "ddb:90E59: :H:",
+       "destination": {
+        "name": "Soest",
+        "type": "stop"
+       },
+       "name": "Regionalzug RB59",
+       "number": "RB59",
+       "description": "Dortmund - Holzwickede - Unna - Soest (- Paderborn)",
+       "product": {
+        "id": 8,
+        "class": 13,
+        "iconId": 6
+       },
+       "operator": {
+        "id": "R2",
+        "name": "eurobahn"
+       }
+      },
+      {
+       "id": "ddb:90E59: :R:",
+       "destination": {
+        "name": "Dortmund Hbf",
+        "type": "stop"
+       },
+       "name": "Regionalzug RB59",
+       "number": "RB59",
+       "description": "(Paderborn -) Soest - Unna - Holzwickede - Dortmund",
+       "product": {
+        "id": 8,
+        "class": 13,
+        "iconId": 6
+       },
+       "operator": {
+        "id": "R2",
+        "name": "eurobahn"
+       }
+      }
+     ]
+    }
+   },
+   {
+    "type": "tripMessage",
+    "id": "ZTP-PROD-139703",
+    "version": 71,
+    "priority": "normal",
+    "timestamps": {
+     "creation": "2026-10-10T03:58:00Z",
+     "availability": {
+      "from": "2026-11-09T20:00:00Z",
+      "to": "2026-11-16T20:00:00Z"
+     },
+     "validity": [
+      {
+       "from": "2026-11-09T20:00:00Z",
+       "to": "2026-11-16T20:00:00Z"
+      }
+     ],
+     "expiration": "2026-11-16T20:00:59Z"
+    },
+    "infoLinks": [
+     {
+      "urlText": "",
+      "url": "http://ems.vrr.de/info-link/9ade493e-1b28-56b0-b13e-907977df2ebb",
+      "content": "Aufgrund des dreigleisigen Ausbaus der Strecke kommt es bei den Zügen der Linien RE 5 (RRX), RE 19, RE 44 und RE 49 vom 09.11.2026 (21:00 Uhr) bis zum 16.11.2026 (21:00 Uhr) zu umfangreichen Fahrplanänderungen im Bereich Oberhausen Hbf/Wesel/Bocholt/Arnhem Centraal/Duisburg Hbf und Bottrop Hbf.",
+      "subtitle": "Großbaustelle Oberhausen Hbf - Emmerich",
+      "title": "Großbaustelle Oberhausen Hbf - Emmerich"
+     }
+    ],
+    "properties": {
+     "source": {
+      "id": "VRR-EMS-LIVE",
+      "name": "VRR-EMS-LIVE",
+      "type": "MENTZ-EMS v2"
+     },
+     "producerRef": "VRR",
+     "deviceRef": "1439f847f8ab4864a994413edb1dd4bd",
+     "messageRef": "9ade493e-1b28-56b0-b13e-907977df2ebb",
+     "eventRef": "6944710a9a667ee8de3024e61f7b515d",
+     "AlertCause": "unknown",
+     "publisher": "ems.comm.addinfo",
+     "incidentDateTime": "09/11/2026 21:00 - 16/11/2026 21:00",
+     "providerCode": "ZTP-PROD"
+    },
+    "affected": {
+     "lines": [
+      {
+       "id": "ddb:90RE5: :R:",
+       "destination": {
+        "name": "Remagen Bahnhof",
+        "type": "stop"
+       },
+       "name": "Regionalzug RE5",
+       "number": "RE5",
+       "product": {
+        "id": 8,
+        "class": 13,
+        "iconId": 6
+       },
+       "operator": {
+        "id": "NX",
+        "name": "National Express"
+       }
+      },
+      {
+       "id": "ddb:90RE5: :H:",
+       "destination": {
+        "name": "Koblenz Hauptbahnhof",
+        "type": "stop"
+       },
+       "name": "Regionalzug RE5",
+       "number": "RE5",
+       "product": {
+        "id": 8,
+        "class": 13,
+        "iconId": 6
+       },
+       "operator": {
+        "id": "NX",
+        "name": "National Express"
+       }
+      },
+      {
+       "id": "ddb:90E19: :H:",
+       "destination": {
+        "name": "Oberhausen Hbf",
+        "type": "stop"
+       },
+       "name": "Regionalzug RE19",
+       "number": "RE19",
+       "description": "Düsseldorf - Duisburg - Oberhausen - Wesel - Bocholt / Emmerich - Arnhem",
+       "product": {
+        "id": 8,
+        "class": 13,
+        "iconId": 6
+       },
+       "operator": {
+        "id": "R4",
+        "name": "VIAS GmbH"
+       }
+      },
+      {
+       "id": "ddb:90E19: :R:",
+       "destination": {
+        "name": "OB-Sterkrade",
+        "type": "stop"
+       },
+       "name": "Regionalzug RE19",
+       "number": "RE19",
+       "description": "Arnhem - Emmerich / Bocholt - Wesel - Oberhausen - Duisburg - Düsseldorf",
+       "product": {
+        "id": 8,
+        "class": 13,
+        "iconId": 6
+       },
+       "operator": {
+        "id": "R4",
+        "name": "VIAS GmbH"
+       }
+      },
+      {
+       "id": "ddb:90E44: :H:",
+       "destination": {
+        "name": "Bottrop Hbf",
+        "type": "stop"
+       },
+       "name": "Regionalzug RE44",
+       "number": "RE44",
+       "description": "Moers - Duisburg - Oberhausen - Bottrop",
+       "product": {
+        "id": 8,
+        "class": 13,
+        "iconId": 6
+       },
+       "operator": {
+        "id": "RR",
+        "name": "Rhein-Ruhr-Bahn (Transdev)"
+       }
+      },
+      {
+       "id": "ddb:90E44: :R:",
+       "destination": {
+        "name": "Duisburg Hbf",
+        "type": "stop"
+       },
+       "name": "Regionalzug RE44",
+       "number": "RE44",
+       "description": "Bottrop - Oberhausen - Duisburg - Moers",
+       "product": {
+        "id": 8,
+        "class": 13,
+        "iconId": 6
+       },
+       "operator": {
+        "id": "RR",
+        "name": "Rhein-Ruhr-Bahn (Transdev)"
+       }
+      },
+      {
+       "id": "ddb:90RE4:9:R:",
+       "destination": {
+        "name": "Wesel Bahnhof",
+        "type": "stop"
+       },
+       "name": "Regionalzug RE49",
+       "number": "RE49",
+       "product": {
+        "id": 8,
+        "class": 13,
+        "iconId": 6
+       },
+       "operator": {
+        "id": "8003",
+        "name": "DB Regio AG NRW"
+       }
+      },
+      {
+       "id": "ddb:90RE4:9:H:",
+       "destination": {
+        "name": "Wuppertal Hbf",
+        "type": "stop"
+       },
+       "name": "Regionalzug RE49",
+       "number": "RE49",
+       "product": {
+        "id": 8,
+        "class": 13,
+        "iconId": 6
+       },
+       "operator": {
+        "id": "8003",
+        "name": "DB Regio AG NRW"
+       }
+      }
+     ]
+    }
+   },
+   {
+    "type": "tripMessage",
+    "id": "ZTP-PROD-137391",
+    "version": 695,
+    "priority": "normal",
+    "timestamps": {
+     "creation": "2026-08-18T05:36:00Z",
+     "availability": {
+      "from": "2026-08-21T19:00:00Z",
+      "to": "2026-12-04T19:00:00Z"
+     },
+     "validity": [
+      {
+       "from": "2026-08-21T19:00:00Z",
+       "to": "2026-12-04T19:00:00Z"
+      }
+     ],
+     "expiration": "2026-12-04T19:00:59Z"
+    },
+    "infoLinks": [
+     {
+      "urlText": "",
+      "url": "http://ems.vrr.de/info-link/a6d264b7-3292-5a88-a240-c484aed31fc4",
+      "content": "Aufgrund von Brückenarbeiten, Gleis- und Weichenerneuerungen sowie Bahnsteigarbeiten kommt es auf der Linie RE 1 (RRX) vom 21.08.2026 (21:00 Uhr) bis zum 04.12.2026 (21:00 Uhr) zu Umleitungen und Teilausfällen zwischen Düsseldorf Hbf und Köln-Mülheim.",
+      "subtitle": "Maßnahmen und Fahrpläne: RE 1 (RRX)",
+      "title": "Maßnahmen und Fahrpläne: RE 1 (RRX)"
+     }
+    ],
+    "properties": {
+     "source": {
+      "id": "VRR-EMS-LIVE",
+      "name": "VRR-EMS-LIVE",
+      "type": "MENTZ-EMS v2"
+     },
+     "producerRef": "VRR",
+     "deviceRef": "1439f847f8ab4864a994413edb1dd4bd",
+     "messageRef": "a6d264b7-3292-5a88-a240-c484aed31fc4",
+     "eventRef": "3c195d118717f05f8d32c81839590859",
+     "AlertCause": "unknown",
+     "publisher": "ems.comm.addinfo",
+     "incidentDateTime": "21/08/2026 21:00 - 04/12/2026 20:00",
+     "providerCode": "ZTP-PROD"
+    },
+    "affected": {
+     "lines": [
+      {
+       "id": "ddb:90RE1: :H:",
+       "destination": {
+        "name": "Aachen, Hbf",
+        "type": "stop"
+       },
+       "name": "Regionalzug RE1",
+       "number": "RE1",
+       "product": {
+        "id": 8,
+        "class": 13,
+        "iconId": 6
+       },
+       "operator": {
+        "id": "NX",
+        "name": "National Express"
+       }
+      }
+     ]
+    }
+   },
+   {
+    "type": "tripMessage",
+    "id": "ZTP-PROD-141135",
+    "version": 6,
+    "priority": "normal",
+    "timestamps": {
+     "creation": "2026-11-13T06:35:00Z",
+     "availability": {
+      "from": "2026-11-13T06:00:00Z",
+      "to": "2026-11-13T10:30:00Z"
+     },
+     "validity": [
+      {
+       "from": "2026-11-13T06:00:00Z",
+       "to": "2026-11-13T10:30:00Z"
+      }
+     ],
+     "expiration": "2026-11-13T10:30:59Z"
+    },
+    "infoLinks": [
+     {
+      "urlText": "",
+      "url": "http://ems.vrr.de/info-link/edd2f4f0-bf1a-516e-8f86-372530f0e8aa",
+      "content": "Strecke zw. Neuss Hbf und Dormagen beeinträchtigt. Bisher keine Informationen zur Dauer der Beeinträchtigung. Grund: Reparatur an der Strecke. Die Züge fahren im betroffenen Bereich langsamer. Es kommt zu Verspätungen und Teilausfällen. Bitte überprüfen Sie den Zuglauf in der Onlinereiseauskunft.",
+      "subtitle": "Strecke zw. Neuss Hbf und Dormagen beeinträchtigt - Reparatur an der Strecke",
+      "title": "Strecke zw. Neuss Hbf und Dormagen beeinträchtigt - Reparatur an der Strecke"
+     }
+    ],
+    "properties": {
+     "source": {
+      "id": "VRR-EMS-LIVE",
+      "name": "VRR-EMS-LIVE",
+      "type": "MENTZ-EMS v2"
+     },
+     "producerRef": "VRR",
+     "deviceRef": "1439f847f8ab4864a994413edb1dd4bd",
+     "messageRef": "edd2f4f0-bf1a-516e-8f86-372530f0e8aa",
+     "eventRef": "c076f2edbbd38b374792104fc99cc70a",
+     "AlertCause": "unknown",
+     "publisher": "ems.comm.addinfo",
+     "incidentDateTime": "13/11/2026 07:00 - 13/11/2026 11:30",
+     "providerCode": "ZTP-PROD"
+    },
+    "affected": {
+     "lines": [
+      {
+       "id": "ddb:90RE7:F:R:",
+       "destination": {
+        "name": "Köln Süd Bf",
+        "type": "stop"
+       },
+       "name": "Regionalzug RE7",
+       "number": "RE7",
+       "product": {
+        "id": 8,
+        "class": 13,
+        "iconId": 6
+       },
+       "operator": {
+        "id": "NX",
+        "name": "National Express"
+       }
+      },
+      {
+       "id": "ddb:90RE7:F:H:",
+       "destination": {
+        "name": "Krefeld Hbf",
+        "type": "stop"
+       },
+       "name": "Regionalzug RE7",
+       "number": "RE7",
+       "product": {
+        "id": 8,
+        "class": 13,
+        "iconId": 6
+       },
+       "operator": {
+        "id": "NX",
+        "name": "National Express"
+       }
+      }
+     ]
+    }
+   },
+   {
+    "type": "tripMessage",
+    "id": "ZTP-PROD-131655",
+    "version": 833,
+    "priority": "normal",
+    "timestamps": {
+     "creation": "2026-04-26T12:43:00Z",
+     "availability": {
+      "from": "2026-09-20T22:00:00Z",
+      "to": "2026-12-13T01:00:00Z"
+     },
+     "validity": [
+      {
+       "from": "2026-11-09T22:00:00Z",
+       "to": "2026-11-15T21:59:00Z"
+      },
+      {
+       "from": "2026-12-11T22:00:00Z",
+       "to": "2026-12-13T01:00:00Z"
+      }
+     ],
+     "expiration": "2026-12-13T01:00:59Z"
+    },
+    "infoLinks": [
+     {
+      "urlText": "",
+      "url": "http://ems.vrr.de/info-link/71191cc4-eaaa-5148-910e-ced4bb941907",
+      "content": "Aufgrund umfangreicher Sanierungsarbeiten kommt es vom 10.07.2026 (19:00 Uhr) bis zum 13.12.2026 (03:00 Uhr) auf den Linien RE 8 und RB 27 zu Zugausfällen zwischen Köln Messe/Deutz und Koblenz Hbf. Ein Ersatzverkehr (SEV) mit Bussen ist eingerichtet.",
+      "subtitle": "Korridorsanierung rechter Rhein mit Teilausfällen zwischen Köln Messe/Deutz und Koblenz Hbf",
+      "title": "Korridorsanierung rechter Rhein mit Teilausfällen zwischen Köln Messe/Deutz und Koblenz Hbf"
+     }
+    ],
+    "properties": {
+     "source": {
+      "id": "VRR-EMS-LIVE",
+      "name": "VRR-EMS-LIVE",
+      "type": "MENTZ-EMS v2"
+     },
+     "producerRef": "VRR",
+     "deviceRef": "1439f847f8ab4864a994413edb1dd4bd",
+     "messageRef": "71191cc4-eaaa-5148-910e-ced4bb941907",
+     "eventRef": "dad3b341dc4d79550b6f2f708e29e4bd",
+     "AlertCause": "unknown",
+     "publisher": "ems.comm.addinfo",
+     "incidentDateTime": "09/11/2026 23:00 - 13/12/2026 02:00",
+     "providerCode": "ZTP-PROD"
+    },
+    "affected": {
+     "lines": [
+      {
+       "id": "ddb:90RE8:B:R:",
+       "destination": {
+        "name": "Köln Messe/Deutz Bf",
+        "type": "stop"
+       },
+       "name": "Regionalzug RE8",
+       "number": "RE8",
+       "product": {
+        "id": 8,
+        "class": 13,
+        "iconId": 6
+       },
+       "operator": {
+        "id": "8003",
+        "name": "DB Regio AG NRW"
+       }
+      },
+      {
+       "id": "ddb:90RE8:B:H:",
+       "destination": {
+        "name": "Koblenz Hauptbahnhof",
+        "type": "stop"
+       },
+       "name": "Regionalzug RE8",
+       "number": "RE8",
+       "product": {
+        "id": 8,
+        "class": 13,
+        "iconId": 6
+       },
+       "operator": {
+        "id": "8003",
+        "name": "DB Regio AG NRW"
+       }
+      },
+      {
+       "id": "ddb:90RB2:7:R:",
+       "destination": {
+        "name": "Köln Hbf",
+        "type": "stop"
+       },
+       "name": "Regionalzug RB27",
+       "number": "RB27",
+       "product": {
+        "id": 8,
+        "class": 13,
+        "iconId": 6
+       },
+       "operator": {
+        "id": "8003",
+        "name": "DB Regio AG NRW"
+       }
+      },
+      {
+       "id": "ddb:90RB2:7:H:",
+       "destination": {
+        "name": "Koblenz Hauptbahnhof",
+        "type": "stop"
+       },
+       "name": "Regionalzug RB27",
+       "number": "RB27",
+       "product": {
+        "id": 8,
+        "class": 13,
+        "iconId": 6
+       },
+       "operator": {
+        "id": "8003",
+        "name": "DB Regio AG NRW"
+       }
+      }
+     ]
+    }
+   },
+   {
+    "type": "tripMessage",
+    "id": "ZTP-PROD-141139",
+    "version": 10,
+    "priority": "normal",
+    "timestamps": {
+     "creation": "2026-11-13T08:14:00Z",
+     "availability": {
+      "from": "2026-11-13T08:11:00Z",
+      "to": "2026-11-13T10:00:00Z"
+     },
+     "validity": [
+      {
+       "from": "2026-11-13T08:11:00Z",
+       "to": "2026-11-13T10:00:00Z"
+      }
+     ],
+     "expiration": "2026-11-13T10:00:59Z"
+    },
+    "infoLinks": [
+     {
+      "urlText": "",
+      "url": "http://ems.vrr.de/info-link/2c49a960-e53d-50d0-b077-882ec2cd04a3",
+      "content": "Reparatur an der Oberleitung in der Region Holzwickede beendet. Vereinzelt kann es noch zu Verspätungen kommen.",
+      "subtitle": "Reparatur an der Oberleitung in der Region Holzwickede beendet",
+      "title": "Reparatur an der Oberleitung in der Region Holzwickede beendet"
+     }
+    ],
+    "properties": {
+     "source": {
+      "id": "VRR-EMS-LIVE",
+      "name": "VRR-EMS-LIVE",
+      "type": "MENTZ-EMS v2"
+     },
+     "producerRef": "VRR",
+     "deviceRef": "1439f847f8ab4864a994413edb1dd4bd",
+     "messageRef": "2c49a960-e53d-50d0-b077-882ec2cd04a3",
+     "eventRef": "c9594e22f2d67fe2a6c05d8582b61891",
+     "AlertCause": "unknown",
+     "publisher": "ems.comm.addinfo",
+     "incidentDateTime": "13/11/2026 09:11 - 13/11/2026 11:00",
+     "providerCode": "ZTP-PROD"
+    },
+    "affected": {
+     "lines": [
+      {
+       "id": "ddb:90E13: :H:",
+       "destination": {
+        "name": "Hagen Hbf",
+        "type": "stop"
+       },
+       "name": "Regionalzug RE13",
+       "number": "RE13",
+       "description": "Venlo - Mönchengladbach - Düsseldorf - Wuppertal - Hagen - Unna - Hamm",
+       "product": {
+        "id": 8,
+        "class": 13,
+        "iconId": 6
+       },
+       "operator": {
+        "id": "R2",
+        "name": "eurobahn"
+       }
+      },
+      {
+       "id": "ddb:90E13: :R:",
+       "destination": {
+        "name": "Wuppertal Hbf",
+        "type": "stop"
+       },
+       "name": "Regionalzug RE13",
+       "number": "RE13",
+       "description": "Hamm - Unna - Hagen - Wuppertal - Düsseldorf - Mönchengladbach - Venlo",
+       "product": {
+        "id": 8,
+        "class": 13,
+        "iconId": 6
+       },
+       "operator": {
+        "id": "R2",
+        "name": "eurobahn"
+       }
+      },
+      {
+       "id": "ddb:90RE7:F:R:",
+       "destination": {
+        "name": "Köln Süd Bf",
+        "type": "stop"
+       },
+       "name": "Regionalzug RE7",
+       "number": "RE7",
+       "product": {
+        "id": 8,
+        "class": 13,
+        "iconId": 6
+       },
+       "operator": {
+        "id": "NX",
+        "name": "National Express"
+       }
+      },
+      {
+       "id": "ddb:90RE7:F:H:",
+       "destination": {
+        "name": "Krefeld Hbf",
+        "type": "stop"
+       },
+       "name": "Regionalzug RE7",
+       "number": "RE7",
+       "product": {
+        "id": 8,
+        "class": 13,
+        "iconId": 6
+       },
+       "operator": {
+        "id": "NX",
+        "name": "National Express"
+       }
+      },
+      {
+       "id": "ddb:90E59: :H:",
+       "destination": {
+        "name": "Soest",
+        "type": "stop"
+       },
+       "name": "Regionalzug RB59",
+       "number": "RB59",
+       "description": "Dortmund - Holzwickede - Unna - Soest (- Paderborn)",
+       "product": {
+        "id": 8,
+        "class": 13,
+        "iconId": 6
+       },
+       "operator": {
+        "id": "R2",
+        "name": "eurobahn"
+       }
+      },
+      {
+       "id": "ddb:90E59: :R:",
+       "destination": {
+        "name": "Dortmund Hbf",
+        "type": "stop"
+       },
+       "name": "Regionalzug RB59",
+       "number": "RB59",
+       "description": "(Paderborn -) Soest - Unna - Holzwickede - Dortmund",
+       "product": {
+        "id": 8,
+        "class": 13,
+        "iconId": 6
+       },
+       "operator": {
+        "id": "R2",
+        "name": "eurobahn"
+       }
+      }
+     ]
+    }
+   },
+   {
+    "type": "tripMessage",
+    "id": "DBProd-2719244",
+    "version": 3,
+    "priority": "normal",
+    "timestamps": {
+     "creation": "2026-11-12T17:23:00Z",
+     "availability": {
+      "from": "2026-11-11T23:00:00Z",
+      "to": "2026-11-14T22:59:00Z"
+     },
+     "validity": [
+      {
+       "from": "2026-11-13T23:00:00Z",
+       "to": "2026-11-14T23:00:00Z"
+      },
+      {
+       "from": "2026-11-11T23:00:00Z",
+       "to": "2026-11-12T23:00:00Z"
+      },
+      {
+       "from": "2026-11-12T23:00:00Z",
+       "to": "2026-11-13T23:00:00Z"
+      }
+     ],
+     "expiration": "2026-11-13T23:00:59Z"
+    },
+    "infoLinks": [
+     {
+      "urlText": "",
+      "url": "http://ems.vrr.de/info-link/dc05924e-a823-5035-8113-4d32ef0c1ad0",
+      "content": "Die Ersatzverkehrsbusse der RB53 (von / nach Jossa) beginnen und enden in Schlüchtern. Die Busse halten nicht in Flieden.",
+      "subtitle": "Störung.",
+      "title": "Störung."
+     }
+    ],
+    "properties": {
+     "source": {
+      "id": "VRR-EMS-LIVE",
+      "name": "VRR-EMS-LIVE",
+      "type": "MENTZ-EMS v2"
+     },
+     "producerRef": "VRR",
+     "deviceRef": "1439f847f8ab4864a994413edb1dd4bd",
+     "messageRef": "dc05924e-a823-5035-8113-4d32ef0c1ad0",
+     "eventRef": "2ac5023f2ac161fd221bb24bab41d9d7",
+     "AlertCause": "unknown",
+     "publisher": "ems.comm.addinfo",
+     "incidentDateTime": "14/11/2026 00:00 - 14/11/2026 00:00",
+     "providerCode": "DBProd"
+    },
+    "affected": {
+     "lines": [
+      {
+       "id": "ddb:90RE5:D:R:",
+       "destination": {
+        "name": "Bad Hersfeld Bahnhof",
+        "type": "stop"
+       },
+       "name": "Regionalzug RE50",
+       "number": "RE50",
+       "product": {
+        "id": 0,
+        "class": 0,
+        "iconId": 0
+       },
+       "operator": {}
+      },
+      {
+       "id": "ddb:90RB5:3:R:",
+       "destination": {
+        "name": "Flieden Bahnhof",
+        "type": "stop"
+       },
+       "name": "Regionalzug RB53",
+       "number": "RB53",
+       "product": {
+        "id": 0,
+        "class": 0,
+        "iconId": 0
+       },
+       "operator": {}
+      },
+      {
+       "id": "ddb:90RE5:D:H:",
+       "destination": {
+        "name": "Frankfurt (Main) Hauptbahnhof",
+        "type": "stop"
+       },
+       "name": "Regionalzug RE50",
+       "number": "RE50",
+       "product": {
+        "id": 0,
+        "class": 0,
+        "iconId": 0
+       },
+       "operator": {}
+      },
+      {
+       "id": "ddb:90RE5:H:H:",
+       "destination": {
+        "name": "Frankfurt (Main) Hauptbahnhof",
+        "type": "stop"
+       },
+       "name": "Regionalzug RE5",
+       "number": "RE5",
+       "product": {
+        "id": 0,
+        "class": 0,
+        "iconId": 0
+       },
+       "operator": {}
+      },
+      {
+       "id": "ddb:90RB5:A:R:",
+       "destination": {
+        "name": "Fulda Bahnhof",
+        "type": "stop"
+       },
+       "name": "Regionalzug RB51",
+       "number": "RB51",
+       "product": {
+        "id": 0,
+        "class": 0,
+        "iconId": 0
+       },
+       "operator": {}
+      }
+     ]
+    }
+   },
+   {
+    "type": "tripMessage",
+    "id": "ZTP-PROD-139941",
+    "version": 11,
+    "priority": "normal",
+    "timestamps": {
+     "creation": "2026-10-16T08:47:00Z",
+     "availability": {
+      "from": "2026-10-14T08:37:00Z",
+      "to": "2026-12-12T21:59:00Z"
+     },
+     "validity": [
+      {
+       "from": "2026-10-14T08:37:00Z",
+       "to": "2026-12-12T21:59:00Z"
+      }
+     ],
+     "expiration": "2026-12-12T21:59:59Z"
+    },
+    "infoLinks": [
+     {
+      "urlText": "",
+      "url": "http://ems.vrr.de/info-link/29cdab53-057a-5bc6-bf2c-e1bdb9928227",
+      "content": "Bauarbeiten vom 13.12.2026 bis zum 09.07.2026",
+      "subtitle": "Vorankündigung Großbaustelle Siegstrecke",
+      "title": "Vorankündigung Großbaustelle Siegstrecke"
+     }
+    ],
+    "properties": {
+     "source": {
+      "id": "VRR-EMS-LIVE",
+      "name": "VRR-EMS-LIVE",
+      "type": "MENTZ-EMS v2"
+     },
+     "producerRef": "VRR",
+     "deviceRef": "1439f847f8ab4864a994413edb1dd4bd",
+     "messageRef": "29cdab53-057a-5bc6-bf2c-e1bdb9928227",
+     "eventRef": "a17d119008b0b3585fac12e75298a9e5",
+     "publisher": "ems.comm.addinfo",
+     "incidentDateTime": "14/10/2026 10:37 - 12/12/2026 22:59",
+     "providerCode": "ZTP-PROD"
+    },
+    "affected": {
+     "lines": [
+      {
+       "id": "ddb:90E09: :R:",
+       "destination": {
+        "name": "Aachen, Hbf",
+        "type": "stop"
+       },
+       "name": "Regionalzug RE9",
+       "number": "RE9",
+       "product": {
+        "id": 8,
+        "class": 13,
+        "iconId": 6
+       },
+       "operator": {
+        "id": "8003",
+        "name": "DB Regio AG NRW"
+       }
+      },
+      {
+       "id": "ddb:90E09: :H:",
+       "destination": {
+        "name": "Siegen Hbf",
+        "type": "stop"
+       },
+       "name": "Regionalzug RE9",
+       "number": "RE9",
+       "product": {
+        "id": 8,
+        "class": 13,
+        "iconId": 6
+       },
+       "operator": {
+        "id": "8003",
+        "name": "DB Regio AG NRW"
+       }
+      },
+      {
+       "id": "ddb:92K12: :R:",
+       "destination": {
+        "name": "Kerpen Sindorf (S)",
+        "type": "stop"
+       },
+       "name": "S-Bahn S12",
+       "number": "S12",
+       "product": {
+        "id": 3,
+        "class": 1,
+        "iconId": 2
+       },
+       "operator": {
+        "id": "8003",
+        "name": "DB Regio AG NRW"
+       }
+      },
+      {
+       "id": "ddb:92K12: :H:",
+       "destination": {
+        "name": "Windeck Au (Sieg) Bf",
+        "type": "stop"
+       },
+       "name": "S-Bahn S12",
+       "number": "S12",
+       "product": {
+        "id": 3,
+        "class": 1,
+        "iconId": 2
+       },
+       "operator": {
+        "id": "8003",
+        "name": "DB Regio AG NRW"
+       }
+      },
+      {
+       "id": "ddb:92K19: :H:",
+       "destination": {
+        "name": "Aachen, Hbf",
+        "type": "stop"
+       },
+       "name": "S-Bahn S19",
+       "number": "S19",
+       "product": {
+        "id": 3,
+        "class": 1,
+        "iconId": 2
+       },
+       "operator": {
+        "id": "8003",
+        "name": "DB Regio AG NRW"
+       }
+      },
+      {
+       "id": "ddb:92K19: :R:",
+       "destination": {
+        "name": "Windeck Au (Sieg) Bf",
+        "type": "stop"
+       },
+       "name": "S-Bahn S19",
+       "number": "S19",
+       "product": {
+        "id": 3,
+        "class": 1,
+        "iconId": 2
+       },
+       "operator": {
+        "id": "8003",
+        "name": "DB Regio AG NRW"
+       }
+      }
+     ]
+    }
+   },
+   {
+    "type": "tripMessage",
+    "id": "DBProd-2712846",
+    "version": 6,
+    "priority": "normal",
+    "timestamps": {
+     "creation": "2026-11-10T07:59:00Z",
+     "availability": {
+      "from": "2026-10-28T07:31:00Z",
+      "to": "2026-11-23T22:59:00Z"
+     },
+     "validity": [
+      {
+       "from": "2026-10-28T07:31:00Z",
+       "to": "2026-11-23T23:00:00Z"
+      }
+     ],
+     "expiration": "2026-11-23T23:00:59Z"
+    },
+    "infoLinks": [
+     {
+      "urlText": "",
+      "url": "http://ems.vrr.de/info-link/b39d8afb-2a2a-5f7b-9189-f7c63cb25f7b",
+      "content": "Bauarbeiten: Vom 25.10., ca. 23 Uhr, bis zum 20.11., ca. 23:30 Uhr, beginnen und enden die Züge der Linie RE 5 abweichend in Hamburg-Harburg. Zusätzlich beginnen und enden die Züge am 23.11. ganztägig in Hamburg-Harburg. Bitte nutzen Sie zwischen Hamburg-Harburg und Hamburg Hbf die S-Bahn.",
+      "subtitle": "Bauarbeiten.",
+      "title": "Bauarbeiten."
+     }
+    ],
+    "properties": {
+     "source": {
+      "id": "VRR-EMS-LIVE",
+      "name": "VRR-EMS-LIVE",
+      "type": "MENTZ-EMS v2"
+     },
+     "producerRef": "VRR",
+     "deviceRef": "1439f847f8ab4864a994413edb1dd4bd",
+     "messageRef": "b39d8afb-2a2a-5f7b-9189-f7c63cb25f7b",
+     "eventRef": "fac993cd67324798a97c61bd868edc1e",
+     "AlertCause": "unknown",
+     "publisher": "ems.comm.addinfo",
+     "incidentDateTime": "28/10/2026 08:31 - 24/11/2026 00:00",
+     "providerCode": "DBProd"
+    },
+    "affected": {
+     "lines": [
+      {
+       "id": "ddb:90H05: :R:",
+       "destination": {
+        "name": "Stade",
+        "type": "stop"
+       },
+       "name": "Regionalzug RE5",
+       "number": "RE5",
+       "product": {
+        "id": 0,
+        "class": 0,
+        "iconId": 0
+       },
+       "operator": {}
+      }
+     ]
+    }
+   }
+  ],
+  "affected": {}
+ }
+}

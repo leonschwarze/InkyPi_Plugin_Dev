@@ -1,0 +1,421 @@
+{% extends "plugin.html" %}
+
+{% block content %}
+{% if fest %}
+<!-- ===================== Festansicht (Heiligabend, Silvester/Neujahr) ===================== -->
+<div lang="de" class="fe {{ orientation }}">
+  <div class="fe-art">{{ fest.svg | safe }}</div>
+  <div class="fe-bar">
+    <div class="fe-day">
+      <div class="fe-date">{{ fest.label }}</div>
+      {% if fest.wx %}
+      <div class="fe-wx">{{ fest.wx.icon | safe }}<div>
+        <div class="fe-t">{{ fest.wx.tmax }}°<small> / {{ fest.wx.tmin }}°</small></div>
+        <div class="fe-sub">{{ fest.wx.text }}{% if fest.wx.prob is not none %} · Regen {{ fest.wx.prob }} %{% endif %}</div>
+      </div></div>
+      {% endif %}
+    </div>
+    <div class="fe-evs">
+      <span class="fe-h">Heute</span>
+      {% for it in fest.events %}
+      <div class="fe-ev"><i style="background: {{ it.color }};"></i><b>{% if it.all_day %}ganztägig{% else %}{{ it.short }}{% endif %}</b><span>{{ it.title }}</span></div>
+      {% endfor %}
+      {% if not fest.events %}<div class="fe-ev"><span>Keine Termine – genießen!</span></div>{% endif %}
+      {% if fest.more %}<div class="fe-ev fe-more"><span>+ {{ fest.more }} weitere</span></div>{% endif %}
+    </div>
+  </div>
+</div>
+{% elif night %}
+<!-- ===================== Nachtbild ===================== -->
+<div lang="de" class="nt {{ orientation }}{% if night.art %} has-art{% endif %}">
+  <section class="nt-day">
+    <div class="nt-wd">{{ night.weekday }}</div>
+    <div class="nt-date">{{ night.date }} · KW {{ night.kw }}</div>
+    {% if night.wx %}
+    <div class="nt-wx">
+      {{ night.wx.icon | safe }}
+      <div class="nt-wx-txt">
+        <div class="nt-temp">{{ night.wx.tmax }}°<span class="nt-low"> / {{ night.wx.tmin }}°</span></div>
+        <div class="nt-cond">{{ night.wx.text }}</div>
+        {% if night.wx.prob is not none %}<div class="nt-sub">Regen {{ night.wx.prob }} % · {{ night.wx.precip }} mm</div>{% endif %}
+      </div>
+    </div>
+    {% endif %}
+    <div class="nt-facts">
+      {% if night.art %}
+      <div>{% if night.night_low %}<span class="{% if night.frost %}nt-frost{% endif %}">Nacht tiefst {{ night.night_low }}°{% if night.frost %}, Frost{% endif %}</span>{% endif %}{% if night.night_low and night.sunrise %} · {% endif %}{% if night.sunrise %}Sonnenaufgang {{ night.sunrise }}{% endif %}</div>
+      {% else %}
+      {% if night.night_low %}<div class="{% if night.frost %}nt-frost{% endif %}">Nacht: tiefst {{ night.night_low }}°{% if night.frost %} · Frost{% endif %}</div>{% endif %}
+      {% if night.sunrise %}<div>Sonnenaufgang {{ night.sunrise }}</div>{% endif %}
+      {% endif %}
+    </div>
+    <div class="nt-moon">{{ night.moon.svg | safe }}<span>{{ night.moon.name }}</span></div>
+  </section>
+  <section class="nt-agenda">
+    <div class="nt-h">Termine</div>
+    {% if night.train %}<div class="nt-ev"><span class="nt-pill">{{ night.train }}</span><span class="nt-title">{{ night.train_from }}</span></div>{% endif %}
+    {% for it in night.all_day %}<div class="nt-allday" style="background: {{ it.color }}; color: {{ it.fg }};">{{ it.title }}</div>{% endfor %}
+    {% for it in night.events %}
+    <div class="nt-ev"><span class="nt-bar" style="background: {{ it.color }};"></span><span class="nt-time">{{ it.short }}</span><span class="nt-title">{{ it.title }}{% if it.location %}<small>{{ it.location }}</small>{% endif %}</span></div>
+    {% endfor %}
+    {% if not night.events and not night.all_day and not night.train %}<div class="nt-none">Keine Termine</div>{% endif %}
+    {% if night.more %}<div class="nt-more">+ {{ night.more }} weitere</div>{% endif %}
+    {% if view_error %}<div class="nt-err">{{ view_error }}</div>{% endif %}
+  </section>
+  {% if night.art %}
+  <!-- Bonner Silhouette mit dem Himmel der Nacht, darüber Wetter und Tageslicht -->
+  <section class="nt-art">
+    <div class="nt-art-cap">
+      <span>Nacht: {% if night.art.weather %}{{ night.art.weather }} · {% endif %}{{ night.moon.name }}</span>
+      {% if night.art.daylight %}<span>{{ night.art.daylight }}</span>{% endif %}
+    </div>
+    {{ night.art.svg | safe }}
+  </section>
+  {% endif %}
+</div>
+{% elif week %}
+<!-- ===================== Wochenvorschau ===================== -->
+<div lang="de" class="wk {{ orientation }}">
+  <header class="wk-head">
+    <span class="wk-title">Woche {{ week.kw }} · {{ week.span }}</span>
+    <span class="wk-sum">{{ week.summary }}</span>
+    {% if laundry %}<span class="wk-laundry lw-{{ laundry.state }}">Wäsche: <b>{{ laundry.badge }}</b></span>{% endif %}
+  </header>
+  <div class="wk-rows">
+    {% for r in week.rows %}
+    <div class="wk-row{% if r.weekend %} we{% endif %}">
+      <div class="wk-day"><b>{{ r.name }}</b><span>{{ r.date }}</span></div>
+      <div class="wk-wx">{% if r.wx %}{{ r.wx.icon | safe }}<div class="wk-t"><b>{{ r.wx.tmax }}°</b> {{ r.wx.tmin }}°{% if r.wx.prob is not none %}<span class="wk-p{% if r.wx.rainy %} rainy{% endif %}">{{ r.wx.prob }} %</span>{% endif %}</div>{% endif %}</div>
+      <div class="wk-evs">
+        {% if r.train %}<span class="wk-chip wk-train">{{ r.train }}</span>{% endif %}
+        {% for it in r["items"] %}
+          {% if it.all_day %}<span class="wk-chip wk-all" style="background: {{ it.color }}; color: {{ it.fg }};">{{ it.title }}</span>
+          {% else %}<span class="wk-chip" style="--c: {{ it.color }};"><b>{{ it.short }}</b>&nbsp;{{ it.title }}</span>{% endif %}
+        {% endfor %}
+        {% if r.more %}<span class="wk-more">+{{ r.more }}</span>{% endif %}
+        {% if not r["items"] and not r.train %}<span class="wk-free">frei</span>{% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% if view_error %}<div class="wk-err">{{ view_error }}</div>{% endif %}
+</div>
+{% else %}
+<div lang="de" class="db {{ orientation }}{% if not use_colors %} mono{% endif %}{% if news %} has-news{% endif %}"
+     style="--bg: {{ plugin_settings.backgroundColor or '#ffffff' }}; --ink: {{ plugin_settings.textColor or '#000000' }};">
+
+  <header class="head">
+    <span class="h-date">{{ date_str }}{% for g in greetings[:2] %}<span class="h-fest">{{ g.icon | safe }}{{ g.text }}</span>{% endfor %}</span>
+    <span class="h-meta">{% if place %}{{ place }} · {% endif %}KW {{ kw }} · Stand {{ updated }}</span>
+  </header>
+
+  <!-- ===================== Wetter ===================== -->
+  <section class="wx">
+    {% if weather %}
+    <div class="wx-top">
+      <div class="wx-icon">{{ weather.icon | safe }}</div>
+      <div class="wx-text">
+        {% if weather.label %}<div class="wx-label">{{ weather.label }}</div>{% endif %}
+        <div class="wx-temp">{{ weather.temp }}<span class="deg">°C</span></div>
+        <div class="wx-cond">{{ weather.text }}</div>
+        <div class="wx-sub">{{ weather.sub }}</div>
+      </div>
+      {% if weather.alert %}
+      {% set a = weather.alert %}
+      <div class="alert lvl-{{ a.rank }}" style="background: {{ a.bg }}; color: {{ a.fg }}; border-color: {{ a.border }};">
+        <div class="alert-head">{{ a.icon | safe }}<span>{{ a.event or a.level }}</span></div>
+        <div class="alert-when">{{ a.when }}{% if weather.alerts_more %} · +{{ weather.alerts_more }}{% endif %}</div>
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="tiles">
+      {% for t in weather.tiles %}
+      <div class="tile">
+        <div class="tile-icon">{{ t.icon | safe }}</div>
+        <div class="tile-body">
+          <div class="tile-label">{{ t.label }}</div>
+          <div class="tile-value">
+            {%- if t.raw %}<span class="raw">{{ t.value | safe }}</span>{% else %}{{ t.value }}{% endif -%}
+            {%- if t.unit %}<span class="unit">{{ t.unit }}</span>{% endif -%}
+            {%- if t.extra %}<span class="extra">{{ t.extra | safe }}</span>{% endif -%}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    {% if wear %}
+    <div class="wear">
+      <div class="wear-head"><span class="wear-title">Anziehen: {{ wear.title }}</span><span class="wear-who">{{ wear.sensitivity }}</span></div>
+      <div class="wear-items">
+        {% for it in wear.pieces %}<div class="wear-item">{{ it.svg | safe }}<span>{{ it.text }}</span></div>{% endfor %}
+      </div>
+      <div class="wear-why">{{ wear.why }}</div>
+    </div>
+    {% endif %}
+
+    {% if graph %}
+    <div class="graph">
+      <div class="g-head">
+        <span class="g-rain">{{ graph.rain_summary }}</span>
+        {% if graph.rain_levels %}
+        <span class="g-legend">
+          {% for lv in graph.rain_levels %}<i class="sw {{ lv }}"></i>{{ {"leicht": "leicht", "maessig": "mäßig", "stark": "stark"}[lv] }}{% endfor %}
+        </span>
+        {% endif %}
+      </div>
+      <div class="g-icons">
+        {% for ic in graph.icons %}<div class="g-ic" style="left: {{ ic.left }}%;">{{ ic.svg | safe }}</div>{% endfor %}
+      </div>
+      <div class="g-area">
+        <div class="g-plot">
+          <svg viewBox="0 0 1000 300" preserveAspectRatio="none">
+            {% for nt in graph.nights %}<rect class="night" x="{{ nt.x }}" y="0" width="{{ nt.w }}" height="300"/>{% endfor %}
+            <path class="line" d="{{ graph.line }}" vector-effect="non-scaling-stroke"/>
+          </svg>
+          {% for t in graph.tlabels %}<div class="t-label {{ t.cls }}{{ t.edge }}" style="left: {{ t.left }}%; top: {{ t.top }}%;">{{ t.text }}</div>{% endfor %}
+        </div>
+        <div class="g-rainrow">
+          <svg viewBox="0 0 1000 100" preserveAspectRatio="none">
+            {% for nt in graph.nights %}<rect class="night" x="{{ nt.x }}" y="0" width="{{ nt.w }}" height="100"/>{% endfor %}
+            {% for c in graph.rain %}<rect class="rain {{ c.cls }}" x="{{ c.x }}" y="{{ c.y }}" width="{{ c.w }}" height="{{ c.h }}" vector-effect="non-scaling-stroke"/>{% endfor %}
+            <line class="axis" x1="0" y1="100" x2="1000" y2="100" vector-effect="non-scaling-stroke"/>
+          </svg>
+        </div>
+        {% if graph.now_left %}<div class="now-line" style="left: {{ graph.now_left }}%;"></div>{% endif %}
+      </div>
+      <div class="g-x">
+        {% for l in graph.xlabels %}<div class="x-label" style="left: {{ l.left }}%;">{{ l.text }}</div>{% endfor %}
+      </div>
+    </div>
+    {% endif %}
+    {% else %}
+    <div class="error-box">Wetter nicht verfügbar<br><span>{{ wx_error }}</span></div>
+    {% endif %}
+  </section>
+
+  <!-- ===================== Kalender ===================== -->
+  <section class="cal">
+    {% if train %}
+    <div class="train st-{{ train.state }}{% if train.alerts %} has-alerts{% endif %}">
+      <div class="tr-row">
+        <div class="tr-line">{{ train.label }}</div>
+        <div class="tr-main">
+          <div class="tr-top">
+            {%- if train.delay and train.state not in ('cancelled',) %}<s class="tr-plan">{{ train.planned }}</s> <span class="tr-new">{{ train.actual }}</span>
+            {%- else %}<span class="tr-time">{{ train.planned }}</span>{% endif %}
+            {%- if train.dest %} <span class="tr-dest">nach {{ train.dest }}</span>{% endif %}
+          </div>
+          {% set arr = train.arrival %}
+          {% if train.platform or train.note %}
+          <div class="tr-sub">
+            {%- if train.platform %}<span class="tr-pl{% if train.platform_changed %} changed{% endif %}">Gleis {{ train.platform }}{% if train.platform_changed %} statt {{ train.planned_platform }}{% endif %}</span>{% endif %}
+            {%- if train.platform and train.note %} · {% endif %}
+            {%- if train.note %}<span class="tr-note">{{ train.note }}</span>{% endif %}
+          </div>
+          {% endif %}
+          {# Ankunft am Ausstieg in eigener Zeile; "endet in …" erklärt einen ausfallenden Ausstieg schon #}
+          {% if arr and not (arr.cancelled and train.note) %}
+          <div class="tr-sub tr-arr">
+            {%- if arr.cancelled %}<span class="tr-new">Halt {{ arr.name }} entfällt</span>
+            {%- else %}an {{ arr.name }} {% if arr.delay >= 5 %}<span class="tr-new">{{ arr.actual }}</span>{% else %}{{ arr.actual }}{% endif %}{% if arr.delay and arr.delay < 5 %} (+{{ arr.delay }}){% endif %}{% if arr.platform_changed %} · <span class="tr-pl changed">Gleis {{ arr.platform }}</span>{% endif %}{% endif -%}
+          </div>
+          {% endif %}
+        </div>
+        <div class="tr-badge">{{ train.badge }}</div>
+      </div>
+      {% if train.alerts %}
+      <!-- Störungsmonitor: Meldungen an genau dieser Fahrt (!) und Störungen auf der Strecke (Gleis-Symbol, VRR) -->
+      <ul class="tr-alerts">
+        {% for a in train.alerts[:(3 if orientation == 'portrait' else 2)] %}<li class="tr-alert lv-{{ a.level }}{% if a.source == 'route' %} tr-route{% endif %}">
+          {%- if a.source == 'route' %}<span class="tr-mark"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6.6 1 2.4 15M9.4 1l4.2 14M1.6 12.6h12.8M3.6 7.8h8.8M5.2 3.8h5.6"/></svg></span>
+          {%- else %}<span class="tr-mark">!</span>{% endif %}<span class="tr-atext">{{ a.text }}</span></li>{% endfor %}
+        {% if train.alerts | length > (3 if orientation == 'portrait' else 2) %}<li class="tr-alert tr-more">+ {{ train.alerts | length - (3 if orientation == 'portrait' else 2) }} weitere Meldung{{ 'en' if train.alerts | length - (3 if orientation == 'portrait' else 2) > 1 }}</li>{% endif %}
+      </ul>
+      {% endif %}
+    </div>
+    {% endif %}
+    {% if trip %}
+    <!-- Aufbruch: wann los, mit Rad oder ÖPNV (je nach Wetter auf allen Wegen der Terminkette) -->
+    <div class="trip tp-{{ trip.state }}">
+      <div class="lw-icon">
+        {%- if trip.icon == 'bike' %}<svg class="lw-svg" viewBox="0 0 48 48" aria-hidden="true"><circle cx="11" cy="31" r="8" fill="none" stroke="#000" stroke-width="2.8"/><circle cx="37" cy="31" r="8" fill="none" stroke="#000" stroke-width="2.8"/><path d="M11 31 L18 19 L32 19 L37 31 M18 19 L24 31 L32 19 M24 31 L11 31" fill="none" stroke="#2E9E3F" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/><path d="M15 14 L22 14 M18 14 L18 19 M32 19 L30 12 L35 11" fill="none" stroke="#000" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        {%- elif trip.icon == 'walk' %}<svg class="lw-svg" viewBox="0 0 48 48" aria-hidden="true"><circle cx="25" cy="8" r="4.5" fill="#000"/><path d="M24 15 L21 29 L14 42 M21 29 L29 35 L31 43 M23 18 L15 24 L13 30 M24 17 L31 23 L37 24" fill="none" stroke="#0082C9" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        {%- else %}<svg class="lw-svg" viewBox="0 0 48 48" aria-hidden="true"><rect x="7" y="5" width="34" height="33" rx="5" fill="#0082C9" stroke="#000" stroke-width="2.6"/><rect x="11" y="10" width="26" height="12" rx="2" fill="#fff" stroke="#000" stroke-width="2.2"/><rect x="11" y="29" width="6" height="4" fill="#fff"/><rect x="31" y="29" width="6" height="4" fill="#fff"/><rect x="10" y="38" width="7" height="6" rx="1.5" fill="#000"/><rect x="31" y="38" width="7" height="6" rx="1.5" fill="#000"/></svg>
+        {%- endif %}</div>
+      <div class="tr-main">
+        <div class="tr-top">{{ trip.top }}</div>
+        <div class="tr-sub">{{ trip.how }}{% if trip.delay %} <span class="tr-new">+{{ trip.delay }}</span>{% endif %}{{ trip.how_after }}</div>
+        <div class="tr-sub">{{ trip.why }}</div>
+      </div>
+    </div>
+    {% endif %}
+    {% if nowcast %}
+    {% set rc = nowcast %}
+    <!-- Regenradar: nur wenn es in den nächsten zwei Stunden regnet (oder gerade regnet) -->
+    <div class="nowcast rd-{{ rc.state }} rd-lv-{{ rc.level }}">
+      <div class="rd-row">
+        <div class="lw-icon"><svg class="lw-svg" viewBox="0 0 48 48" aria-hidden="true"><path d="M6 24 Q6 8 24 8 Q42 8 42 24 Q38 20 33 24 Q29 20 24 24 Q19 20 15 24 Q10 20 6 24 Z" fill="#1E6FD9" stroke="#000" stroke-width="2.4" stroke-linejoin="round"/><path d="M24 24 L24 38 Q24 42 20.5 42 Q17 42 17 38.5" fill="none" stroke="#000" stroke-width="2.8" stroke-linecap="round"/><path d="M10 31 l-2 5 M36 31 l-2 5 M30 37 l-2 5" stroke="#1E6FD9" stroke-width="3" stroke-linecap="round"/></svg></div>
+        <div class="tr-main">
+          <div class="tr-top">{{ rc.top }}</div>
+          <div class="tr-sub">{{ rc.level_text }}{% if rc.after %} · {{ rc.after }}{% endif %}</div>
+        </div>
+      </div>
+      <div class="rd-stripbox">
+        {{ rc.strip.svg | safe }}
+        <div class="rd-ticks"><span class="rd-tick" style="left: 0%;">jetzt</span>{% for t in rc.strip.ticks %}<span class="rd-tick" style="left: {{ '%.1f' | format(t.x) }}%;">{{ t.text }} Uhr</span>{% endfor %}</div>
+      </div>
+    </div>
+    {% endif %}
+    {% if air %}
+    <!-- Luftqualität: nur wenn die Luft mäßig oder schlechter ist (gestrichelt = Wert unsicher, feuchte Luft) -->
+    <div class="air aq-{{ air.state }}{% if air.unsure %} aq-unsure{% endif %}">
+      <div class="lw-icon"><svg class="lw-svg" viewBox="0 0 48 48" aria-hidden="true"><path d="M3 15 H27 Q33 15 33 9.5 Q33 4.5 28.5 4.5 Q24.5 4.5 24.5 8.5 M3 25 H38 Q44.5 25 44.5 31 Q44.5 36.5 39.5 36.5 Q35 36.5 35 32.5 M3 35 H22" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><circle class="aq-dot" cx="12" cy="7" r="3.2"/><circle class="aq-dot" cx="20" cy="42" r="3.2"/><circle class="aq-dot" cx="31" cy="42.5" r="2.4"/><circle class="aq-dot" cx="41" cy="14" r="2.6"/></svg></div>
+      <div class="tr-main">
+        <div class="aq-head"><span class="tr-top">{{ air.top }}</span><span class="tr-badge">{{ air.badge }}</span></div>
+        <div class="tr-sub">{{ air.reading }} · {{ air.where }}</div>
+        <div class="tr-sub aq-advice">{{ air.advice }}</div>
+      </div>
+    </div>
+    {% endif %}
+    {% if laundry %}
+    <div class="laundry lw-{{ laundry.state }}">
+      <div class="lw-icon"><svg class="lw-svg" viewBox="0 0 48 48" aria-hidden="true"><path d="M3 9 Q24 15 45 9" fill="none" stroke="#000" stroke-width="2.6" stroke-linecap="round"/><path d="M14 12 L9 16 L12 21 L15 19 L15 40 L33 40 L33 19 L36 21 L39 16 L34 12 Q30 15.5 24 15.5 Q18 15.5 14 12 Z" fill="#0082C9" stroke="#000" stroke-width="2.4" stroke-linejoin="round"/><rect x="17.5" y="10" width="2.6" height="6" fill="#000"/><rect x="28" y="10" width="2.6" height="6" fill="#000"/></svg></div>
+      <div class="tr-main">
+        <div class="tr-top">{{ laundry.text }}</div>
+        <div class="tr-sub">{{ laundry.details }}</div>
+      </div>
+      <div class="tr-badge">{{ laundry.badge }}</div>
+    </div>
+    {% endif %}
+    {% if cal_error %}
+    <div class="error-box">Kalender nicht verfügbar<br><span>{{ cal_error }}</span></div>
+    {% else %}
+    <div class="cal-list fit-box">
+      {% for day in (calendar[:1] if news else calendar) %}
+      <div class="day{% if day.is_today %} is-today{% endif %}">
+        <div class="day-head fit-item"><span class="dl">{{ day.label }}</span>{% if day.date %}<span class="dd">{{ day.date }}</span>{% endif %}</div>
+        {% if not day.events %}<div class="ev empty fit-item">Keine weiteren Termine</div>{% endif %}
+        {% for ev in day.events %}
+        <div class="ev fit-item{% if ev.all_day %} allday{% endif %}" style="--c: {{ ev.color }}; --fg: {{ ev.fg }};">
+          <div class="ev-time">{% if ev.now %}<span class="now-tag">jetzt</span>{% elif not ev.all_day %}{{ ev.short }}{% endif %}</div>
+          <div class="ev-main">
+            <div class="ev-title">{{ ev.title }}{% if ev.span %} <span class="ev-span">{{ ev.span }}</span>{% endif %}</div>
+            {% set sub = [] %}
+            {# Abfahrt vor dem Ort: Ein langer Ort darf sie nicht verdrängen #}
+            {% if ev.trip %}{% set _ = sub.append(ev.trip) %}{% endif %}
+            {% if show_location and ev.location %}{% set _ = sub.append(ev.location) %}{% endif %}
+            {% if ev.rain %}{% set _ = sub.append(ev.rain) %}{% endif %}
+            {% if ev.now and ev.until %}{% set _ = sub.append(ev.until) %}{% endif %}
+            {% if sub %}<div class="ev-sub">{{ sub | join(" · ") }}</div>{% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endfor %}
+    </div>
+    <div class="more" hidden></div>
+    {% endif %}
+    {% if news %}
+    <!-- Nachrichten (nur im Morgenfenster): dann zeigt die Spalte nur die heutigen Termine -->
+    <div class="news-wrap">
+      <div class="news" data-max="{{ 3 if orientation == 'portrait' else 2 }}">
+        {% for grp in news %}
+        <div class="nw-grp{% if grp.lang %} nw-{{ grp.lang }}{% endif %}"{% if grp.lang %} lang="{{ grp.lang }}" data-max="{{ 2 if orientation == 'portrait' else 1 }}"{% endif %}>
+          <span class="nw-lvl">{{ grp.label }}</span>
+          <div class="nw-items">
+            {% for it in grp["items"] %}<div class="nw-item" data-src="{{ it.source }}">{{ it.title }}</div>{% endfor %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      <div class="nw-credit">{{ news_sources | join(" · ") }}</div>
+    </div>
+    {% endif %}
+  </section>
+</div>
+
+{% endif %}
+
+<script>
+  /* Termine, die nicht mehr passen, ausblenden und zählen (wie im Kalender-Plugin). */
+  function fitBox(box) {
+    const more = box.parentElement.querySelector(':scope > .more');
+    const items = Array.from(box.querySelectorAll('.fit-item'));
+    items.forEach(el => { el.style.display = ''; });
+    if (more) more.hidden = true;
+    const overflows = () => {
+      const limit = box.getBoundingClientRect().bottom;
+      return items.findIndex(el => el.getBoundingClientRect().bottom > limit + 0.5);
+    };
+    let cut = overflows();
+    if (cut < 0) return;
+    if (more) { more.hidden = false; more.textContent = '+ 0 weitere Termine'; }
+    cut = overflows();
+    let hidden = 0;
+    items.forEach((el, i) => {
+      if (i >= cut) { el.style.display = 'none'; if (el.matches('.ev:not(.empty)')) hidden++; }
+    });
+    box.querySelectorAll('.day').forEach(d => {
+      const head = d.querySelector('.day-head');
+      const evs = Array.from(d.querySelectorAll('.ev'));
+      if (head && evs.length && !evs.some(e => e.style.display !== 'none')) head.style.display = 'none';
+    });
+    if (more) {
+      if (hidden > 0) more.textContent = hidden === 1 ? '+ 1 weiterer Termin' : `+ ${hidden} weitere Termine`;
+      else more.hidden = true;
+    }
+  }
+  /* Schlagzeilen gerecht verteilen: zuerst je Ebene eine, dann je eine zweite (hochkant
+     auch eine dritte), solange Platz ist. Der Quellenhinweis nennt nur, was sichtbar ist. */
+  function fitNews(box) {
+    const max = Number(box.dataset.max || 2);
+    const groups = Array.from(box.querySelectorAll('.nw-grp'));
+    const items = groups.map(g => Array.from(g.querySelectorAll('.nw-item')));
+    groups.forEach(g => { g.style.display = ''; });
+    items.flat().forEach(el => { el.style.display = 'none'; });
+    // Über Kanten messen, nicht über scrollHeight: das rundet auf und meldet sonst 1 px "Überlauf"
+    const fits = () => {
+      const limit = box.getBoundingClientRect().bottom + 0.5;
+      return items.flat().every(e => e.style.display === 'none' || e.getBoundingClientRect().bottom <= limit);
+    };
+    for (let rank = 0; rank < max; rank++) {
+      items.forEach((list, gi) => {
+        const el = list[rank];
+        if (rank >= Number(groups[gi].dataset.max || max)) return;
+        if (!el || (rank > 0 && list[rank - 1].style.display === 'none')) return;
+        el.style.display = '';
+        if (!fits()) el.style.display = 'none';
+      });
+    }
+    groups.forEach((g, i) => { if (!items[i].some(e => e.style.display !== 'none')) g.style.display = 'none'; });
+    const credit = box.parentElement.querySelector('.nw-credit');
+    if (credit) {
+      const src = [...new Set(items.flat().filter(e => e.style.display !== 'none').map(e => e.dataset.src))];
+      credit.textContent = src.join(' · ');
+    }
+  }
+  function fitAll() {
+    document.querySelectorAll('.fit-box').forEach(fitBox);
+    document.querySelectorAll('.news').forEach(fitNews);
+  }
+  fitAll();
+  window.addEventListener('load', () => fitAll());
+  window.addEventListener('resize', fitAll);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitAll);
+  if (window.ResizeObserver) {
+    // Nach jeder Größenänderung alles neu verteilen: Termine zuerst, dann die Nachrichten darunter.
+    // Größenänderungen, die fitAll selbst verursacht, werden ignoriert (sonst Endlosschleife,
+    // weil die Terminliste im Nachrichtenmodus so hoch ist wie ihr Inhalt).
+    const sizes = new Map();
+    const remember = () => document.querySelectorAll('.fit-box').forEach(b => sizes.set(b, b.clientWidth + 'x' + b.clientHeight));
+    const ro = new ResizeObserver(entries => {
+      if (entries.every(e => sizes.get(e.target) === e.target.clientWidth + 'x' + e.target.clientHeight)) return;
+      fitAll(); remember();
+    });
+    remember();
+    document.querySelectorAll('.fit-box').forEach(b => ro.observe(b));
+  }
+</script>
+{% endblock %}

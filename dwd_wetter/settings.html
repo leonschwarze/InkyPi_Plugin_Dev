@@ -1,0 +1,327 @@
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+<!-- Markiert gespeicherte Einstellungen und ihr Format.
+     1 = bis 1.7 (Titel über titleSelection + customTitle), 2 = Titel nur noch über customTitle (leer = DWD-Name).
+     Ist cfgVersion vorhanden, gelten nicht angehakte Checkboxen als "aus". -->
+<input type="hidden" name="cfgVersion" value="2" />
+
+<div class="st">
+
+<section class="st-sec">
+    <h3 class="st-h">Ort</h3>
+    <div class="st-row">
+        <input type="text" id="dwdSearch" class="form-input" placeholder="Ort suchen, z. B. Bonn" />
+        <button type="button" id="dwdSearchBtn" class="action-button compact">Suchen</button>
+    </div>
+    <div id="dwdResults" class="st-results"></div>
+    <div class="st-row st-coords">
+        <label for="latitude">Breite</label>
+        <input type="text" id="latitude" name="latitude" class="form-input" placeholder="50.7374" inputmode="decimal" />
+        <label for="longitude">Länge</label>
+        <input type="text" id="longitude" name="longitude" class="form-input" placeholder="7.0982" inputmode="decimal" />
+        <button type="button" id="openMap" class="action-button compact">Karte</button>
+    </div>
+    <div class="st-field">
+        <label for="customTitle">Titel im Kopf</label>
+        <input type="text" id="customTitle" name="customTitle" class="form-input" placeholder="leer = Ortsname vom DWD" />
+    </div>
+    <div id="oldTitle" class="st-hint" hidden></div>
+</section>
+
+<section class="st-sec">
+    <h3 class="st-h">Inhalt</h3>
+    <label class="st-check"><input type="checkbox" class="dwd-check" name="showAlerts" value="true" data-default="true"><span>Amtliche DWD-Warnungen</span></label>
+
+    <label class="st-check"><input type="checkbox" class="dwd-check" id="showMetrics" name="showMetrics" value="true" data-default="true"><span>Messwerte als Kacheln</span></label>
+    <div class="st-sub" data-parent="showMetrics">
+        <div class="st-grid">
+            {% for t in tiles %}
+            <label class="st-check"><input type="checkbox" class="dwd-check" name="tile_{{ t.key }}" value="true" data-default="{{ 'true' if t.default else 'false' }}"><span>{{ t.label }}</span></label>
+            {% endfor %}
+        </div>
+        <div class="st-hint">Ab 7 Kacheln wird alles etwas kleiner.</div>
+    </div>
+
+    <div class="st-line">
+        <label class="st-check"><input type="checkbox" class="dwd-check" id="showGraph" name="showGraph" value="true" data-default="true"><span>Stundenverlauf</span></label>
+        <select id="hourlyHours" name="hourlyHours" class="form-input st-select" aria-label="Stunden im Verlauf">
+            <option value="12">12 Stunden</option>
+            <option value="24">24 Stunden</option>
+            <option value="36">36 Stunden</option>
+            <option value="48">48 Stunden</option>
+        </select>
+    </div>
+    <div class="st-sub" data-parent="showGraph">
+        <label class="st-check"><input type="checkbox" class="dwd-check" name="graphIcons" value="true" data-default="true"><span>Wettersymbole</span></label>
+        <label class="st-check"><input type="checkbox" class="dwd-check" name="nightShading" value="true" data-default="true"><span>Nachtstunden grau hinterlegen</span></label>
+    </div>
+
+    <div class="st-line">
+        <label class="st-check"><input type="checkbox" class="dwd-check" id="showForecast" name="showForecast" value="true" data-default="true"><span>Vorhersage</span></label>
+        <select id="forecastDays" name="forecastDays" class="form-input st-select" aria-label="Tage in der Vorhersage">
+            <option value="3">3 Tage</option>
+            <option value="4">4 Tage</option>
+            <option value="5">5 Tage</option>
+            <option value="6">6 Tage</option>
+            <option value="7">7 Tage</option>
+        </select>
+    </div>
+
+    <label class="st-check"><input type="checkbox" class="dwd-check" name="showFooter" value="true" data-default="true"><span>Fußzeile (Quelle, Messstation, Uhrzeit)</span></label>
+</section>
+
+<details class="st-more" id="moreBox">
+    <summary>Erweitert</summary>
+    <label class="st-check"><input type="checkbox" class="dwd-check" name="einkSnap" value="true" data-default="true"><span>Schärfer auf Inky-Displays (Farben einrasten statt rastern)</span></label>
+    <div class="st-hint">Nur abschalten, wenn ein anderes Display als das Inky Impression angeschlossen ist oder zum Vergleich.</div>
+</details>
+
+</div>
+
+<div id="mapModal" class="modal">
+    <div class="modal-content">
+        <span class="close-button" onclick="closeModal('mapModal')">×</span>
+        <h2 id="modalTitle">Ort wählen</h2>
+        <div class="separator"></div>
+        <div id="map" style="width: 100%; height: 240px; margin: 10px 0px;"></div>
+        <button type="button" id="closeMap" class="action-button">Übernehmen</button>
+    </div>
+</div>
+
+<style>
+    /* Gemeinsames Gerüst der Einstellungsseiten (gleich in dwd_wetter und nextcloud_kalender) */
+    .st { display: flex; flex-direction: column; gap: 4px; color: var(--text-primary); }
+    .st-sec { display: flex; flex-direction: column; gap: 8px; margin: 6px 0 10px; }
+    .st-h { margin: 6px 0 2px; padding-bottom: 4px; font-size: 1.05rem; font-weight: 600;
+        border-bottom: 1px solid var(--border-color); }
+    .st-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .st-row > .form-input { flex: 1 1 8em; min-width: 0; }
+    .st-coords label, .st-field label { font-weight: 600; white-space: nowrap; }
+    .st-coords .form-input { flex: 1 1 5em; }
+    .st-field { display: flex; flex-direction: column; gap: 4px; }
+    .st-line { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .st-line .st-check { flex: 0 1 auto; }
+    .st-select { flex: 0 0 auto; width: auto; }
+    /* Checkbox mit hängendem Einzug: lange Texte laufen neben der Box weiter, nicht darunter */
+    .st-check { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; line-height: 1.35; }
+    .st-check input { flex: 0 0 auto; width: 18px; height: 18px; margin: 1px 0 0; accent-color: var(--accent-primary); }
+    .st-sub { display: flex; flex-direction: column; gap: 8px; margin-left: 28px; padding-left: 12px;
+        border-left: 2px solid var(--border-color); transition: opacity 0.2s; }
+    /* Nur optisch abschwächen, NICHT disabled setzen: disabled-Felder schickt der Browser beim Speichern nicht mit,
+       die Werte wären dann weg. */
+    .st-off { opacity: 0.45; }
+    .st-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(10.5em, 1fr)); gap: 8px 16px; }
+    .st-hint { font-size: 0.9em; color: var(--text-secondary); line-height: 1.4; }
+    .st-hint code { font-size: 0.95em; }
+    .st-check + .st-hint { margin: -4px 0 0 28px; }
+    .st-hint button { font: inherit; color: var(--accent-primary); background: none; border: 0; padding: 0;
+        cursor: pointer; text-decoration: underline; }
+    .st-more { margin: 4px 0 6px; }
+    .st-more > summary { cursor: pointer; padding: 10px; background: var(--collapsible-bg); list-style: none; }
+    .st-more > summary::-webkit-details-marker { display: none; }
+    .st-more > summary::after { content: "▼"; float: right; opacity: 0.5; }
+    .st-more[open] > summary::after { content: "▲"; }
+    .st-more[open] { display: flex; flex-direction: column; gap: 8px; }
+    .st-results { display: flex; flex-direction: column; gap: 4px; }
+    .st-results:empty { display: none; }
+    .st-results button {
+        text-align: left; padding: 6px 10px; border-radius: 6px; cursor: pointer;
+        border: 1px solid var(--border-color, #ccc); background: transparent; color: inherit; font: inherit;
+    }
+    .st-results button:hover { background: rgba(127, 127, 127, 0.15); }
+</style>
+
+<script>
+(function () {
+    const CFG_VERSION = 2;
+    const DEFAULTS = { hourlyHours: '24', forecastDays: '5' };
+
+    // Gespeicherte Einstellungen älterer Versionen ins aktuelle Format bringen.
+    // Gleiche Regeln wie migrate_settings() in dwd_wetter.py – beide Stellen zusammen ändern.
+    function migrate(saved) {
+        const s = Object.assign({}, saved);
+        const version = s.cfgVersion === undefined ? 0 : (parseInt(s.cfgVersion, 10) || 1);
+        if (version < 2) {
+            // Früher: Radio "Ortsname vom DWD" / "Eigener Titel" (Standard). Jetzt: Feld leer = DWD-Name.
+            if ((s.titleSelection || 'auto') !== 'custom') {
+                s.inactiveTitle = (s.customTitle || '').trim();   // nur für den Hinweis, wird nicht gespeichert
+                s.customTitle = '';
+            }
+            delete s.titleSelection;
+        }
+        s.version = version;
+        return s;
+    }
+
+    function hasCoord(v) {
+        return typeof v === 'string' && v.trim() !== '' && Number.isFinite(Number(v.replace(',', '.')));
+    }
+
+    function validateCoordInputs() {
+        const lat = document.getElementById('latitude').value.trim().replace(',', '.');
+        const lon = document.getElementById('longitude').value.trim().replace(',', '.');
+        if (lat === '' || lon === '') {
+            showResponseModal('failure', 'Bitte einen Ort wählen oder Breiten- und Längengrad eingeben.');
+            return false;
+        }
+        if (!hasCoord(lat) || !hasCoord(lon) || Math.abs(Number(lat)) > 90 || Math.abs(Number(lon)) > 180) {
+            showResponseModal('failure', 'Breiten- und Längengrad sind ungültig.');
+            return false;
+        }
+        document.getElementById('latitude').value = lat;
+        document.getElementById('longitude').value = lon;
+        return true;
+    }
+
+    // Vor dem Speichern/Aktualisieren prüfen
+    const baseHandleAction = window.handleAction;
+    window.handleAction = async function (action) {
+        if (!validateCoordInputs()) return;
+        return baseHandleAction(action);
+    };
+    const baseOpenModal = window.openModal;
+    window.openModal = function (modalId) {
+        if (modalId === 'scheduleModal' && !validateCoordInputs()) return;
+        return baseOpenModal(modalId);
+    };
+
+    function setLocation(lat, lon, name) {
+        document.getElementById('latitude').value = Number(lat).toFixed(4);
+        document.getElementById('longitude').value = Number(lon).toFixed(4);
+        if (name) {
+            document.getElementById('dwdSearch').value = name;
+        }
+    }
+
+    // Unteroptionen abschwächen, wenn die Hauptoption aus ist
+    function syncSubs() {
+        document.querySelectorAll('.st-sub[data-parent]').forEach(sub => {
+            const parent = document.querySelector(`input[name="${sub.dataset.parent}"]`);
+            sub.classList.toggle('st-off', !!parent && !parent.checked);
+        });
+        document.getElementById('hourlyHours').classList.toggle('st-off', !document.getElementById('showGraph').checked);
+        document.getElementById('forecastDays').classList.toggle('st-off', !document.getElementById('showForecast').checked);
+    }
+
+    // ---- Ortssuche über OpenStreetMap/Nominatim (läuft im Browser) ----
+    async function searchPlace() {
+        const q = document.getElementById('dwdSearch').value.trim();
+        const box = document.getElementById('dwdResults');
+        box.innerHTML = '';
+        if (!q) return;
+        box.innerHTML = '<span class="st-hint">Suche …</span>';
+        try {
+            const url = 'https://nominatim.openstreetmap.org/search?format=jsonv2&limit=6&accept-language=de'
+                + '&countrycodes=de,at,ch,lu,li,be,nl,dk,pl,cz,fr&q=' + encodeURIComponent(q);
+            const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+            const items = await res.json();
+            box.innerHTML = '';
+            if (!items.length) {
+                box.innerHTML = '<span class="st-hint">Kein Ort gefunden.</span>';
+                return;
+            }
+            items.forEach(item => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.textContent = item.display_name;
+                btn.addEventListener('click', () => {
+                    // Titel nicht mehr automatisch füllen: Ein gefülltes Feld wäre jetzt ein eigener Titel.
+                    setLocation(item.lat, item.lon, item.name || item.display_name.split(',')[0]);
+                    box.innerHTML = '';
+                    const hint = document.createElement('span');
+                    hint.className = 'st-hint';
+                    hint.textContent = 'Übernommen: ' + item.display_name;
+                    box.appendChild(hint);
+                });
+                box.appendChild(btn);
+            });
+        } catch (e) {
+            box.innerHTML = '<span class="st-hint">Suche fehlgeschlagen – bitte Koordinaten manuell eingeben.</span>';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('dwdSearchBtn').addEventListener('click', searchPlace);
+        document.getElementById('dwdSearch').addEventListener('keydown', e => {
+            if (e.key === 'Enter') { e.preventDefault(); searchPlace(); }
+        });
+
+        // ---- Karte ----
+        let map, marker;
+        document.getElementById('openMap').addEventListener('click', () => {
+            const latV = document.getElementById('latitude').value;
+            const lonV = document.getElementById('longitude').value;
+            const has = hasCoord(latV) && hasCoord(lonV);
+            const lat = has ? Number(latV) : 51.1;   // Mitte Deutschlands
+            const lon = has ? Number(lonV) : 10.4;
+            const zoom = has ? 10 : 5.5;
+            openModal('mapModal');
+            setTimeout(() => {
+                if (!map) {
+                    map = L.map('map').setView([lat, lon], zoom);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '© OpenStreetMap'
+                    }).addTo(map);
+                    marker = L.marker([lat, lon], { draggable: true }).addTo(map);
+                    map.on('click', ev => marker.setLatLng(ev.latlng));
+                } else {
+                    map.invalidateSize();
+                    map.setView([lat, lon], zoom);
+                    marker.setLatLng([lat, lon]);
+                }
+            }, 100);
+        });
+        document.getElementById('closeMap').addEventListener('click', () => {
+            if (marker) {
+                const p = marker.getLatLng().wrap();
+                setLocation(p.lat, p.lng);
+            }
+            closeModal('mapModal');
+        });
+
+        // ---- Formular vorbelegen ----
+        const saved = migrate(loadPluginSettings ? pluginSettings : {});
+        const configured = loadPluginSettings && saved.version > 0;
+
+        document.querySelectorAll('.dwd-check').forEach(cb => {
+            // data-since: Checkboxen, die es in der gespeicherten Version noch nicht gab, starten mit dem Standard
+            const known = configured && saved.version >= Number(cb.dataset.since || 1);
+            if (known) {
+                cb.checked = saved[cb.name] === 'true';
+            } else if (loadPluginSettings && saved[cb.name] !== undefined) {
+                cb.checked = saved[cb.name] === 'true';      // sehr alte Einstellungen ohne cfgVersion
+            } else {
+                cb.checked = cb.dataset.default === 'true';
+            }
+            cb.addEventListener('change', syncSubs);
+        });
+
+        document.getElementById('latitude').value = saved.latitude ?? '';
+        document.getElementById('longitude').value = saved.longitude ?? '';
+        document.getElementById('customTitle').value = saved.customTitle ?? '';
+        document.getElementById('hourlyHours').value = saved.hourlyHours || DEFAULTS.hourlyHours;
+        document.getElementById('forecastDays').value = saved.forecastDays || DEFAULTS.forecastDays;
+
+        // Früher eingetippter, aber nicht aktiver Titel: anbieten statt stillschweigend verwerfen
+        if (saved.inactiveTitle) {
+            const box = document.getElementById('oldTitle');
+            box.textContent = 'Bisher war „Ortsname vom DWD“ gewählt. Früher eingetragen, aber nicht aktiv: ';
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.textContent = '„' + saved.inactiveTitle + '“ übernehmen';
+            btn.addEventListener('click', () => {
+                document.getElementById('customTitle').value = saved.inactiveTitle;
+                box.hidden = true;
+            });
+            box.appendChild(btn);
+            box.hidden = false;
+        }
+        // Abweichung vom Standard? Dann "Erweitert" gleich offen zeigen
+        if (!document.querySelector('input[name="einkSnap"]').checked) {
+            document.getElementById('moreBox').open = true;
+        }
+        syncSubs();
+    });
+})();
+</script>

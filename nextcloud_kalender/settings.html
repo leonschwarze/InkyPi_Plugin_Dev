@@ -1,0 +1,196 @@
+<!-- Markiert gespeicherte Einstellungen und ihr Format. Ist cfgVersion vorhanden, gelten nicht angehakte
+     Checkboxen als "aus". Neue Checkboxen: cfgVersion erhöhen, data-since setzen, SINCE_VERSION im Python-Code. -->
+<input type="hidden" name="cfgVersion" value="1" />
+
+<div class="st">
+
+<section class="st-sec">
+    <h3 class="st-h">Nextcloud</h3>
+    <div class="st-field">
+        <label for="nextcloudUrl">Adresse</label>
+        <input type="text" id="nextcloudUrl" name="nextcloudUrl" class="form-input" placeholder="https://cloud.example.de" inputmode="url" />
+    </div>
+    <div class="st-field">
+        <label for="username">Benutzername</label>
+        <input type="text" id="username" name="username" class="form-input" autocomplete="off" />
+    </div>
+    <div class="st-hint">
+        Das App-Passwort steht nicht hier, sondern unter <b>API Keys</b> als <code id="keyHint">NEXTCLOUD_APP_PASSWORD</code>.
+        Erstellen in Nextcloud: Einstellungen → Sicherheit → „Neues App-Passwort erstellen“.
+    </div>
+    <div class="st-field">
+        <label for="calendars">Kalender</label>
+        <input type="text" id="calendars" name="calendars" class="form-input" placeholder="leer = alle, sonst z. B.: Persönlich, Arbeit" />
+    </div>
+    <div class="st-hint">Namen wie in Nextcloud, durch Komma getrennt. Bei einem Tippfehler zeigt „Update Now“ die verfügbaren Kalender an.</div>
+</section>
+
+<section class="st-sec">
+    <h3 class="st-h">Ansicht</h3>
+    <div class="st-seg" role="radiogroup" aria-label="Ansicht">
+        <label><input type="radio" name="layout" value="agenda"><span>Terminliste</span></label>
+        <label><input type="radio" name="layout" value="week"><span>Woche (7 Spalten)</span></label>
+    </div>
+    <div class="st-sub" id="agendaOptions">
+        <div class="st-line">
+            <span>Zeitraum</span>
+            <select id="days" name="days" class="form-input st-select">
+                <option value="3">3 Tage</option>
+                <option value="7">7 Tage</option>
+                <option value="14">14 Tage</option>
+                <option value="30">30 Tage</option>
+            </select>
+        </div>
+        <label class="st-check"><input type="checkbox" class="nc-check" name="showMonth" value="true" data-default="true"><span>Monatsübersicht</span></label>
+    </div>
+    <div class="st-sub" id="weekOptions">
+        <div class="st-line">
+            <span>Woche beginnt</span>
+            <select id="weekStart" name="weekStart" class="form-input st-select">
+                <option value="today">mit heute</option>
+                <option value="monday">am Montag dieser Woche</option>
+            </select>
+        </div>
+    </div>
+    <div class="st-field">
+        <label for="customTitle">Titel (optional)</label>
+        <input type="text" id="customTitle" name="customTitle" class="form-input" placeholder="z. B. Familie" />
+    </div>
+</section>
+
+<section class="st-sec">
+    <h3 class="st-h">Termine</h3>
+    <label class="st-check"><input type="checkbox" class="nc-check" name="useColors" value="true" data-default="true"><span>Kalenderfarben aus Nextcloud</span></label>
+    <label class="st-check"><input type="checkbox" class="nc-check" name="showLocation" value="true" data-default="true"><span>Ort anzeigen</span></label>
+    <label class="st-check"><input type="checkbox" class="nc-check" name="showEmptyToday" value="true" data-default="true"><span>„Heute“ auch ohne Termine zeigen</span></label>
+    <label class="st-check"><input type="checkbox" class="nc-check" name="showPast" value="true" data-default="false"><span>Bereits beendete Termine von heute zeigen</span></label>
+    <label class="st-check"><input type="checkbox" class="nc-check" name="showFooter" value="true" data-default="true"><span>Fußzeile mit Uhrzeit der Aktualisierung</span></label>
+</section>
+
+<details class="st-more" id="moreBox">
+    <summary>Erweitert</summary>
+    <div class="st-field">
+        <label for="passwordKey">Name des Schlüssels für das App-Passwort</label>
+        <input type="text" id="passwordKey" name="passwordKey" class="form-input" placeholder="NEXTCLOUD_APP_PASSWORD" />
+    </div>
+    <div class="st-hint">Nur ändern, wenn mehrere Kalender-Instanzen verschiedene Nextcloud-Konten nutzen.</div>
+    <label class="st-check"><input type="checkbox" class="nc-check" name="verifySSL" value="true" data-default="true"><span>SSL-Zertifikat prüfen</span></label>
+    <div class="st-hint">Nur bei selbst signierten Zertifikaten abschalten.</div>
+    <label class="st-check"><input type="checkbox" class="nc-check" name="einkSnap" value="true" data-default="true"><span>Schärfer auf Inky-Displays (Farben einrasten statt rastern)</span></label>
+</details>
+
+</div>
+
+<style>
+    /* Gemeinsames Gerüst der Einstellungsseiten (gleich in dwd_wetter und nextcloud_kalender) */
+    .st { display: flex; flex-direction: column; gap: 4px; color: var(--text-primary); }
+    .st-sec { display: flex; flex-direction: column; gap: 8px; margin: 6px 0 10px; }
+    .st-h { margin: 6px 0 2px; padding-bottom: 4px; font-size: 1.05rem; font-weight: 600;
+        border-bottom: 1px solid var(--border-color); }
+    .st-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .st-row > .form-input { flex: 1 1 8em; min-width: 0; }
+    .st-field { display: flex; flex-direction: column; gap: 4px; }
+    .st-field label { font-weight: 600; }
+    .st-line { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .st-line .st-check { flex: 0 1 auto; }
+    .st-select { flex: 0 0 auto; width: auto; }
+    /* Checkbox mit hängendem Einzug: lange Texte laufen neben der Box weiter, nicht darunter */
+    .st-check { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; line-height: 1.35; }
+    .st-check input { flex: 0 0 auto; width: 18px; height: 18px; margin: 1px 0 0; accent-color: var(--accent-primary); }
+    .st-sub { display: flex; flex-direction: column; gap: 8px; margin-left: 28px; padding-left: 12px;
+        border-left: 2px solid var(--border-color); }
+    .st-sub[hidden] { display: none; }
+    .st-hint { font-size: 0.9em; color: var(--text-secondary); line-height: 1.4; }
+    .st-hint code { font-size: 0.95em; }
+    .st-check + .st-hint { margin: -4px 0 0 28px; }
+    /* Umschalter aus zwei Radios (Terminliste / Woche) */
+    .st-seg { display: flex; flex-wrap: wrap; border: 1px solid var(--border-color); border-radius: 6px; overflow: hidden; align-self: flex-start; }
+    .st-seg label { cursor: pointer; }
+    .st-seg input { position: absolute; opacity: 0; pointer-events: none; }
+    .st-seg span { display: block; padding: 7px 14px; font-weight: 600; }
+    .st-seg label + label span { border-left: 1px solid var(--border-color); }
+    .st-seg input:checked + span { background: var(--accent-primary); color: #fff; }
+    .st-seg input:focus-visible + span { outline: 2px solid var(--accent-hover); outline-offset: -2px; }
+    .st-more { margin: 4px 0 6px; }
+    .st-more > summary { cursor: pointer; padding: 10px; background: var(--collapsible-bg); list-style: none; }
+    .st-more > summary::-webkit-details-marker { display: none; }
+    .st-more > summary::after { content: "▼"; float: right; opacity: 0.5; }
+    .st-more[open] > summary::after { content: "▲"; }
+    .st-more[open] { display: flex; flex-direction: column; gap: 8px; }
+</style>
+
+<script>
+(function () {
+    const CFG_VERSION = 1;
+    const DEFAULTS = { layout: 'agenda', days: '14', weekStart: 'today' };
+    const DEFAULT_KEY = 'NEXTCLOUD_APP_PASSWORD';
+
+    function updateLayoutOptions() {
+        const layout = document.querySelector('input[name="layout"]:checked')?.value || 'agenda';
+        // hidden blendet nur aus – die Felder werden trotzdem mitgespeichert
+        document.getElementById('agendaOptions').hidden = layout !== 'agenda';
+        document.getElementById('weekOptions').hidden = layout !== 'week';
+    }
+
+    function validate() {
+        const url = document.getElementById('nextcloudUrl').value.trim();
+        const user = document.getElementById('username').value.trim();
+        if (!url || !user) {
+            showResponseModal('failure', 'Bitte Nextcloud-Adresse und Benutzernamen angeben.');
+            return false;
+        }
+        return true;
+    }
+
+    const baseHandleAction = window.handleAction;
+    window.handleAction = async function (action) {
+        if (!validate()) return;
+        return baseHandleAction(action);
+    };
+    const baseOpenModal = window.openModal;
+    window.openModal = function (modalId) {
+        if (modalId === 'scheduleModal' && !validate()) return;
+        return baseOpenModal(modalId);
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const saved = loadPluginSettings ? pluginSettings : {};
+        const version = saved.cfgVersion === undefined ? 0 : (parseInt(saved.cfgVersion, 10) || 1);
+        const configured = loadPluginSettings && version > 0;
+
+        document.querySelectorAll('.nc-check').forEach(cb => {
+            // data-since: Checkboxen, die es in der gespeicherten Version noch nicht gab, starten mit dem Standard
+            const known = configured && version >= Number(cb.dataset.since || 1);
+            if (known) {
+                cb.checked = saved[cb.name] === 'true';
+            } else if (loadPluginSettings && saved[cb.name] !== undefined) {
+                cb.checked = saved[cb.name] === 'true';      // sehr alte Einstellungen ohne cfgVersion
+            } else {
+                cb.checked = cb.dataset.default === 'true';
+            }
+        });
+        ['nextcloudUrl', 'username', 'passwordKey', 'calendars', 'customTitle'].forEach(id => {
+            document.getElementById(id).value = saved[id] ?? '';
+        });
+        document.getElementById('days').value = saved.days || DEFAULTS.days;
+        document.getElementById('weekStart').value = saved.weekStart || DEFAULTS.weekStart;
+        const layout = saved.layout || DEFAULTS.layout;
+        (document.querySelector(`input[name="layout"][value="${layout}"]`)
+            || document.querySelector('input[name="layout"][value="agenda"]')).checked = true;
+
+        document.querySelectorAll('input[name="layout"]').forEach(r => r.addEventListener('change', updateLayoutOptions));
+        updateLayoutOptions();
+
+        // Hinweis zeigt den tatsächlich genutzten Schlüssel; abweichende Werte klappen "Erweitert" auf
+        const keyInput = document.getElementById('passwordKey');
+        const showKey = () => { document.getElementById('keyHint').textContent = keyInput.value.trim() || DEFAULT_KEY; };
+        keyInput.addEventListener('input', showKey);
+        showKey();
+        const ssl = document.querySelector('input[name="verifySSL"]');
+        const snap = document.querySelector('input[name="einkSnap"]');
+        if ((keyInput.value.trim() && keyInput.value.trim() !== DEFAULT_KEY) || !ssl.checked || !snap.checked) {
+            document.getElementById('moreBox').open = true;
+        }
+    });
+})();
+</script>

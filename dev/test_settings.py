@@ -153,6 +153,16 @@ DB_CASES = {
                                                 "airEnabled": "true", "trainRoute": "true", "catEnabled": "true",
                                                 "catWeather": "true", "catNight": "true", "pollenEnabled": "true",
                                                 "nightArt": "true", "meteorEnabled": None},
+    # 1.18: Mondfinsternisse – aus bzw. an (gemeinsam mit nightArt, da verschachtelt)
+    "v16 Finsternisse noch unbekannt (nightArt aus)": {**DB_9, "cfgVersion": "16", "radarEnabled": "true",
+                                                       "airEnabled": "true", "trainRoute": "true",
+                                                       "catEnabled": "true", "catWeather": "true",
+                                                       "catNight": "true", "pollenEnabled": "true",
+                                                       "meteorEnabled": "true", "nightArt": None},
+    "v17 Finsternisse aus, Rest wie gehabt": {**DB_9, "cfgVersion": "17", "radarEnabled": "true",
+                                              "airEnabled": "true", "trainRoute": "true", "catEnabled": "true",
+                                              "catWeather": "true", "catNight": "true", "pollenEnabled": "true",
+                                              "nightArt": "true", "meteorEnabled": "true", "eclipseEnabled": None},
 }
 
 

@@ -121,6 +121,13 @@ DB_CASES = {
                                       "trainRoute": "true", "catEnabled": None, "catWeather": "true"},
     "v13 Katze an, ohne Wetter": {**DB_9, "cfgVersion": "13", "radarEnabled": "true", "airEnabled": "true",
                                   "trainRoute": "true", "catEnabled": "true", "catWeather": None},
+    # 1.15: Katze im Nachtbild – aus, bzw. Katze ganz aus mit gemerktem Nachtbild-Schalter
+    "v14 Katze nicht im Nachtbild": {**DB_9, "cfgVersion": "14", "radarEnabled": "true", "airEnabled": "true",
+                                     "trainRoute": "true", "catEnabled": "true", "catWeather": "true",
+                                     "catNight": None},
+    "v14 Katze aus, Nachtbild gemerkt": {**DB_9, "cfgVersion": "14", "radarEnabled": "true", "airEnabled": "true",
+                                         "trainRoute": "true", "catEnabled": None, "catWeather": "true",
+                                         "catNight": "true"},
 }
 
 

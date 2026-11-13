@@ -93,6 +93,39 @@ def main():
         check(ok and p["w"] > 0 and p["h"] > 0, f"{name}: gültiges SVG ({p['w']}×{p['h']})")
         check("#" not in p["svg"], f"{name}: Farben nur über CSS-Variablen (Schwarz-Weiß-Modus)")
 
+    print("Nachtbild (Katze auf dem Mond)")
+    sys.path.insert(0, str(REPO / "tagesdashboard"))
+    import nachtgrafik
+    g = katze.on_moon(400, 30)
+    try:
+        ET.fromstring(f'<svg xmlns="http://www.w3.org/2000/svg">{g}</svg>')
+        ok = True
+    except ET.ParseError:
+        ok = False
+    check(ok and "#FFE500" in g, "on_moon: gültiges SVG mit gelbem Z")
+    night = datetime(2026, 11, 10, 23, 40, tzinfo=TZ)
+    wx = {"cloud": 20}
+    with_cat = nachtgrafik.svg(night, wx, cat=katze.on_moon)
+    def cat_part(svg_):
+        i = svg_.index('stroke-linecap="round"')
+        return svg_[svg_.rindex("<g", 0, i):svg_.index("</g>", i)]
+    check(cat_part(with_cat) == cat_part(nachtgrafik.svg(night.replace(minute=55), wx, cat=katze.on_moon)),
+          "gleiche Nacht → Katze an derselben Stelle (kein Zufall, nightFreeze bleibt wirksam)")
+    check(nachtgrafik.svg(night, wx) != with_cat and "stroke-width" in with_cat, "mit Katze anders als ohne")
+    check(nachtgrafik.svg(night, {"cloud": 95, "wet": True}, cat=katze.on_moon).count("#FFE500\" fill=\"none\" d=\"M38") == 0,
+          "kein Mond (Regen, ganz bedeckt) → keine Katze")
+    # Mond mit Katze nie über Münster oder Langem Eugen (sitzt tiefer und würde dahinter verschwinden)
+    import re
+    bad = []
+    for width in (800, 480):
+        s_ = min(1.0, (width - 230) / 400)
+        for i in range(60):
+            svg_ = nachtgrafik.svg(night + timedelta(days=i), wx, width=width, cat=katze.on_moon)
+            mx = float(re.search(r'<path d="M([0-9.]+),', svg_).group(1))
+            if 60 * s_ < mx < 250 * s_ + 20:
+                bad.append((width, i, mx))
+    check(not bad, f"Mond mit Katze nie hinter Münster/Langem Eugen (60 Nächte, quer und hochkant){bad[:3]}")
+
     print()
     print("Alles in Ordnung." if not FAILS else f"{len(FAILS)} Fehler.")
     sys.exit(1 if FAILS else 0)

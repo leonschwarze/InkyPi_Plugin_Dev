@@ -128,6 +128,21 @@ DB_CASES = {
     "v14 Katze aus, Nachtbild gemerkt": {**DB_9, "cfgVersion": "14", "radarEnabled": "true", "airEnabled": "true",
                                          "trainRoute": "true", "catEnabled": None, "catWeather": "true",
                                          "catNight": "true"},
+    # 1.16: Pollenflug – aus mit gemerkter Stufe/Arten bzw. an mit eigener Auswahl
+    "v15 Pollen aus, Stufe und Arten gemerkt": {**DB_9, "cfgVersion": "15", "radarEnabled": "true",
+                                                "airEnabled": "true", "trainRoute": "true", "catEnabled": "true",
+                                                "catWeather": "true", "catNight": "true", "pollenEnabled": None,
+                                                "pollenLevel": "3", "pollenHasel": "true", "pollenErle": "true",
+                                                "pollenEsche": "true", "pollenBirke": None, "pollenGraeser": "true",
+                                                "pollenRoggen": "true", "pollenBeifuss": "true",
+                                                "pollenAmbrosia": None},
+    "v15 Pollen an, nur Gräser und Birke": {**DB_9, "cfgVersion": "15", "radarEnabled": "true", "airEnabled": "true",
+                                            "trainRoute": "true", "catEnabled": "true", "catWeather": "true",
+                                            "catNight": "true", "pollenEnabled": "true", "pollenLevel": "2",
+                                            "pollenHasel": None, "pollenErle": None, "pollenEsche": None,
+                                            "pollenBirke": "true", "pollenGraeser": "true", "pollenRoggen": None,
+                                            "pollenBeifuss": None, "pollenAmbrosia": None,
+                                            "pollenRegion": "32"},
 }
 
 

@@ -111,6 +111,8 @@ def main():
     ap.add_argument("--air", default="gut", choices=["gut", "maessig", "schlecht", "sehrschlecht", "nebel", "ozon",
                                                      "ohnestation", "ausfall", "wenige"],
                     help="Luftqualität simulieren (dev/mock_luft.py); die Feuchte kommt aus --scenario (herbst 82 %%, trocken 62 %%)")
+    ap.add_argument("--pollen", default="gut", choices=["gut", "gering", "mittel", "hoch", "uebergang", "ausfall"],
+                    help="Tagesdashboard: Pollenflug simulieren (dev/mock_pollen.py)")
     ap.add_argument("--display", default="inky", choices=["inky", "mock"])
     ap.add_argument("--font", default="eink", choices=["eink", "mono", "aa"])
     ap.add_argument("--inky-saturation", type=float, default=0.5)
@@ -144,6 +146,8 @@ def main():
     mock_radar.install(now, args.radar)
     import mock_luft  # Luft immer simulieren (Standard: gut, dann bleibt das Bild wie bisher)
     mock_luft.install(now, args.air)
+    import mock_pollen  # Pollen immer simulieren (Standard: gut, dann bleibt das Bild wie bisher)
+    mock_pollen.install(now, args.pollen)
 
     settings = dict(BASE_SETTINGS)
     env = {}
@@ -175,6 +179,8 @@ def main():
         tag += f"_radar-{args.radar}"
     if args.air != "gut":
         tag += f"_luft-{args.air}"
+    if args.pollen != "gut":
+        tag += f"_pollen-{args.pollen}"
     if args.display == "mock" or args.font != "eink":
         tag += f"_{args.display}-{args.font}"
     for label, res, orientation in parse_sizes(args.sizes):

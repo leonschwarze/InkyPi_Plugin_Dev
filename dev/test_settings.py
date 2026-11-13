@@ -116,6 +116,11 @@ DB_CASES = {
                         "trainAlerts": "true", "trainRoute": None},
     "v12 Störungsmonitor aus, Strecke gemerkt": {**DB_9, "cfgVersion": "12", "radarEnabled": "true",
                                                  "airEnabled": "true", "trainAlerts": None, "trainRoute": "true"},
+    # 1.14: Katze – aus mit gemerkter Wetter-Option bzw. an ohne Wetter
+    "v13 Katze aus, Wetter gemerkt": {**DB_9, "cfgVersion": "13", "radarEnabled": "true", "airEnabled": "true",
+                                      "trainRoute": "true", "catEnabled": None, "catWeather": "true"},
+    "v13 Katze an, ohne Wetter": {**DB_9, "cfgVersion": "13", "radarEnabled": "true", "airEnabled": "true",
+                                  "trainRoute": "true", "catEnabled": "true", "catWeather": None},
 }
 
 

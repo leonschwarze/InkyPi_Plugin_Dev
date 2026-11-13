@@ -11,7 +11,8 @@ Die Daten sind relativ zu einem festen Zeitpunkt `now` aufgebaut:
 
 Szenarien: "herbst" (Standard), "winter" (Schnee statt Regen, Frost),
 "sommer" (Hitze, Unwetterwarnung), "ruhig" (wie herbst, aber ohne Warnungen),
-"klar" (abends trocken, klare feuchte Nacht mit Tau), "trocken" (abends trocken, trockene windige Nacht).
+"klar" (abends trocken, klare feuchte Nacht mit Tau und Bewölkung < 30 % – auch fürs Nachtbild
+"sternklar"), "trocken" (abends trocken, trockene windige Nacht).
 Die beiden letzten sind für die Wäsche-Karte; sie haben keine Warnungen.
 "nebel" und "bedeckt" (wie herbst, aber die kommende Nacht neblig bzw. bedeckt) für das Nachtbild.
 """
@@ -73,6 +74,9 @@ def hourly(now, scenario="herbst"):
             rh, spread, wind = 96, 0.8, 6
         elif scenario == "trocken":
             rh, spread, wind = 62, 8, 14
+        if scenario == "klar" and day in (0, 1) and (hour >= 17 or hour < 7):
+            cloud = 20  # heute Nacht sternklar (< 30 %), für das Nachtbild (nachtgrafik.describe);
+                        # day 0 und 1, weil die Nacht über Mitternacht in den nächsten Kalendertag fällt
         recs.append({
             "timestamp": dt.isoformat(),
             "source_id": 1234 if dt < now else 5678,

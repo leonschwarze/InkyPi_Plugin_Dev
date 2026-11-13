@@ -143,6 +143,16 @@ DB_CASES = {
                                             "pollenBirke": "true", "pollenGraeser": "true", "pollenRoggen": None,
                                             "pollenBeifuss": None, "pollenAmbrosia": None,
                                             "pollenRegion": "32"},
+    # 1.17: Sternschnuppenströme – aus bzw. an (gemeinsam mit nightArt, da verschachtelt)
+    "v15 Sternschnuppen noch unbekannt (nightArt aus)": {**DB_9, "cfgVersion": "15", "radarEnabled": "true",
+                                                         "airEnabled": "true", "trainRoute": "true",
+                                                         "catEnabled": "true", "catWeather": "true",
+                                                         "catNight": "true", "pollenEnabled": "true",
+                                                         "nightArt": None},
+    "v16 Sternschnuppen aus, Rest wie gehabt": {**DB_9, "cfgVersion": "16", "radarEnabled": "true",
+                                                "airEnabled": "true", "trainRoute": "true", "catEnabled": "true",
+                                                "catWeather": "true", "catNight": "true", "pollenEnabled": "true",
+                                                "nightArt": "true", "meteorEnabled": None},
 }
 
 

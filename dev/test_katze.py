@@ -42,6 +42,42 @@ def reason(now, nowcast=None, **kw):
     return katze.weather_reason(records, now, nowcast, feels_like)
 
 
+BBOX_JS = """() => [...document.querySelectorAll('svg')].map(s => {
+  const inv = s.getScreenCTM().inverse(); let y0 = 1e9, y1 = -1e9, x0 = 1e9, x1 = -1e9;
+  for (const el of s.querySelectorAll('path,circle,ellipse,rect,line,polyline,polygon')) {
+    const bb = el.getBBox(), t = inv.multiply(el.getScreenCTM());
+    for (const [px, py] of [[bb.x, bb.y], [bb.x + bb.width, bb.y], [bb.x, bb.y + bb.height],
+                            [bb.x + bb.width, bb.y + bb.height]]) {
+      const q = new DOMPoint(px, py).matrixTransform(t);
+      x0 = Math.min(x0, q.x); y0 = Math.min(y0, q.y); x1 = Math.max(x1, q.x); y1 = Math.max(y1, q.y);
+    }
+  }
+  return [s.dataset.name, x0, y0, x1, y1];
+})"""
+
+
+def outside_viewbox():
+    """Posen, deren Zeichnung (ohne Strichbreite) über ihre viewBox hinausragt. placeCat rechnet nur mit
+    der viewBox – ein Hütchen darüber könnte sonst Text überdecken (ist in 1.20 beim Partyhut passiert).
+    Braucht Playwright (wie test_settings.py); ohne → None."""
+    try:
+        from playwright.sync_api import sync_playwright
+    except ImportError:
+        return None
+    poses = {n: katze.pose(n) for n in katze.POSES}
+    html = "".join(p["svg"].replace("<svg ", f'<svg data-name="{n}" width="{p["w"] * 4}" ')
+                   for n, p in poses.items())
+    with sync_playwright() as pw:
+        browser = pw.chromium.launch()
+        page = browser.new_page()
+        page.set_content(f"<body>{html}</body>")
+        boxes = page.evaluate(BBOX_JS)
+        browser.close()
+    # 0,6 Einheiten Spielraum: Pfoten stehen bei y = 43,5, Rundungen dürfen leicht über den Rand
+    return [(n, round(x0, 1), round(y0, 1), round(x1, 1), round(y1, 1)) for n, x0, y0, x1, y1 in boxes
+            if x0 < -0.6 or y0 < -0.6 or x1 > poses[n]["w"] + 0.6 or y1 > poses[n]["h"] + 0.6]
+
+
 def main():
     now = datetime(2026, 11, 10, 15, 7, tzinfo=TZ)
     print("Wetterregeln (C)")
@@ -80,6 +116,37 @@ def main():
     stormy = [hour(now.replace(minute=0), wind_gust_speed=70)]
     c = katze.choose(now, stormy)
     check(c["main"]["name"] == c["flat"]["name"] == "sturm", "Sturm-Pose ist flach und gilt für alle Plätze")
+
+    print("Anlässe (seit 1.20)")
+    morning = datetime(2026, 11, 11, 6, 0, tzinfo=TZ)
+    window = [morning + timedelta(minutes=15 * i) for i in range(14)]          # Nachrichtenfenster 6–9:30
+    picks = [katze.choose(t, occasions=["nachrichten"]) for t in window]
+    papers = [c["main"]["name"] == "zeitung" for c in picks]
+    check(sum(papers) == 7, f"Nachrichtenfenster: Zeitung genau jedes zweite Mal ({sum(papers)} von 14)")
+    check(all(a != b for a, b in zip(papers, papers[1:])), "Zeitung und Alltag wechseln sich ab")
+    check(all(c["reason"] == "nachrichten" for c in picks if c["main"]["name"] == "zeitung"), "reason = nachrichten")
+    occ = next(t for t in window if katze.occasion_slot(t))
+    plain = next(t for t in window if not katze.occasion_slot(t))
+    rain = lambda t: [hour(t.replace(minute=0), precipitation=1)]  # noqa: E731
+    c = katze.choose(occ, rain(occ), occasions=["geburtstag", "nachrichten"], feels_like=feels_like)
+    check(c["main"]["name"] == "partyhut", "Geburtstag geht dem Wetter vor (Anlass-Takt, Regen)")
+    c = katze.choose(plain, rain(plain), occasions=["geburtstag"], feels_like=feels_like)
+    check(c["main"]["name"] == "schirm", "im anderen Takt gilt am Geburtstag das Wetter")
+    c = katze.choose(occ, rain(occ), occasions=["nachrichten", "zug"], feels_like=feels_like)
+    check(c["main"]["name"] == "schirm", "Wetter geht Nachrichten und Zug vor")
+    c = katze.choose(occ, occasions=["geburtstag"])
+    check(c["main"]["name"] == "partyhut" and c["spots"][0] == "kopf", "Partyhut braucht Höhe → zuerst die Kopfzeile")
+    both = {katze.choose(t, occasions=["nachrichten", "zug"])["main"]["name"]
+            for t in window if katze.occasion_slot(t)}
+    check(both == {"zeitung", "koffer"}, "Zug-Dienstag im Nachrichtenfenster: Zeitung und Koffer abwechselnd")
+    evening = datetime(2026, 11, 10, 18, 0, tzinfo=TZ)
+    socks = [katze.choose(evening + timedelta(minutes=15 * i), occasions=["waesche"])["main"]["name"]
+             for i in range(8)]
+    check(socks.count("socke") == 4 and katze.is_flat("socke"), "Wäsche-Karte: Socke jedes zweite Mal (flach)")
+    check(katze.choose(occ)["reason"] is None, "ohne Anlass und Wetter: Alltag")
+    check(not set(katze.OCCASION_POSE.values()) & set(katze.EVERYDAY), "Anlass-Posen kommen nie im Alltag")
+    starts = {katze.occasion_slot(datetime(2026, 11, d, 6, 0, tzinfo=TZ)) for d in range(1, 15)}
+    check(starts == {True, False}, "welcher Takt beginnt, wechselt von Tag zu Tag")
 
     print("Zeichnungen")
     for name in katze.POSES:
@@ -125,6 +192,12 @@ def main():
             if 60 * s_ < mx < 250 * s_ + 20:
                 bad.append((width, i, mx))
     check(not bad, f"Mond mit Katze nie hinter Münster/Langem Eugen (60 Nächte, quer und hochkant){bad[:3]}")
+
+    out = outside_viewbox()
+    if out is None:
+        print("  --      Posen in ihrer viewBox: übersprungen (Playwright fehlt)")
+    else:
+        check(not out, f"alle Posen liegen in ihrer viewBox (placeCat rechnet damit){out}")
 
     print()
     print("Alles in Ordnung." if not FAILS else f"{len(FAILS)} Fehler.")

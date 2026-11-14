@@ -163,6 +163,16 @@ DB_CASES = {
                                               "airEnabled": "true", "trainRoute": "true", "catEnabled": "true",
                                               "catWeather": "true", "catNight": "true", "pollenEnabled": "true",
                                               "nightArt": "true", "meteorEnabled": "true", "eclipseEnabled": None},
+    # 1.19: Helle Planeten – aus bzw. an (gemeinsam mit nightArt, da verschachtelt)
+    "v17 Planeten noch unbekannt (nightArt aus)": {**DB_9, "cfgVersion": "17", "radarEnabled": "true",
+                                                   "airEnabled": "true", "trainRoute": "true", "catEnabled": "true",
+                                                   "catWeather": "true", "catNight": "true", "pollenEnabled": "true",
+                                                   "meteorEnabled": "true", "eclipseEnabled": "true", "nightArt": None},
+    "v18 Planeten aus, Rest wie gehabt": {**DB_9, "cfgVersion": "18", "radarEnabled": "true",
+                                          "airEnabled": "true", "trainRoute": "true", "catEnabled": "true",
+                                          "catWeather": "true", "catNight": "true", "pollenEnabled": "true",
+                                          "nightArt": "true", "meteorEnabled": "true", "eclipseEnabled": "true",
+                                          "planetEnabled": None},
 }
 
 

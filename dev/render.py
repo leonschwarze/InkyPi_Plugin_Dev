@@ -9,6 +9,7 @@ Beispiele:
   python dev/render.py tagesdashboard --time "2026-11-10 07:12" --train ok --strecke stoerung   # Streckenmeldung (VRR)
   python dev/render.py tagesdashboard --time "2026-11-11 07:20" --news ohnega   # Nachrichten, GA-Feed fehlt
   python dev/render.py tagesdashboard --air schlecht --scenario trocken          # Luftqualität (Bürgersensoren)
+  python dev/render.py tagesdashboard --fail kalender --radar down --seit 9:10   # Statusanzeige: Ausfall seit 9:10
 
 Ablauf:
   * verlinkt die Plugin-Ordner dieses Repos nach <InkyPi>/src/plugins/ (falls noch nicht vorhanden)
@@ -29,7 +30,7 @@ InkyPi-Pfad: --inkypi oder Umgebungsvariable INKYPI_DIR, sonst ../InkyPi neben d
 import argparse
 import os
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -99,6 +100,8 @@ def main():
     ap.add_argument("--sizes", default="800x480,480x800v,1600x1200")
     ap.add_argument("--set", action="append", default=[], metavar="KEY=VALUE", help="Plugin-Einstellung setzen")
     ap.add_argument("--fail", choices=["wetter", "kalender", "uv"], help="Ausfall einer Datenquelle simulieren")
+    ap.add_argument("--seit", metavar="HH:MM", help="Statusanzeige: simulierte Ausfälle laufen schon seit dieser "
+                    "Uhrzeit (am Tag von --time, oder \"gestern 22:40\"). Ohne: Ausfall beginnt jetzt")
     ap.add_argument("--train", choices=["ok", "leicht", "spaet", "ausfall", "gleis", "kurz", "stoerung", "sev", "ohnelive", "down"],
                     help="Tagesdashboard: Zuganzeige einschalten und Bahn-Daten simulieren (Zeit im Zugfenster wählen)")
     ap.add_argument("--strecke", default="ruhig", choices=["ruhig", "stoerung", "gesperrt", "baustelle", "behoben",
@@ -167,6 +170,20 @@ def main():
     cls = getattr(module, PLUGINS[args.plugin])
     cls.current_time = lambda self, tz: now.astimezone(tz)
     plugin = cls({"id": args.plugin})
+    if args.seit and args.plugin == "tagesdashboard":
+        # Statusanzeige: Ausfälle, die in dieser Runde beginnen, auf die gewünschte Uhrzeit zurückdatieren
+        status = __import__("plugins.tagesdashboard.status", fromlist=["x"])
+        yesterday = args.seit.startswith("gestern")
+        hh, mm = args.seit.replace("gestern", "").strip().split(":")
+        since = now.replace(hour=int(hh), minute=int(mm)) - timedelta(days=1 if yesterday else 0)
+        real_commit = status.commit
+
+        def commit(when):
+            real_commit(when)
+            for st in status._state.values():
+                if st["since"] == when:
+                    st["since"] = since
+        status.commit = commit
 
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
@@ -181,6 +198,8 @@ def main():
         tag += f"_luft-{args.air}"
     if args.pollen != "gut":
         tag += f"_pollen-{args.pollen}"
+    if args.seit:
+        tag += f"_seit-{args.seit.replace(':', '').replace('gestern ', 'g')}"
     if args.display == "mock" or args.font != "eink":
         tag += f"_{args.display}-{args.font}"
     for label, res, orientation in parse_sizes(args.sizes):

@@ -14,6 +14,8 @@ Installation eines Plugins:
 inkypi plugin install tagesdashboard https://github.com/<dein-name>/inkypi-plugins
 ```
 
+Dazu kommt ein Zusatz, der kein Plugin ist: `ausschaltbild/` zeigt beim Ausschalten des Pi „Ausgeschaltet – der Stecker kann jetzt gezogen werden“ (Installation mit `sudo bash install.sh`, Anleitung in `dev/paket/README-Ausschaltbild.md`).
+
 ## Schärfer auf dem Inky Impression
 
 Das Inky Impression 7,3″ kann nur sechs Farben darstellen. Alles andere setzt der Treiber aus farbigen Pünktchen zusammen, dabei fransen Schrift und Linien aus. Zwei Maßnahmen machen das Bild deutlich schärfer:

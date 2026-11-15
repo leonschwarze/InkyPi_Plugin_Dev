@@ -1,0 +1,20 @@
+[Unit]
+Description=InkyPi-Ausschaltbild: zeigt beim Ausschalten, dass der Stecker gezogen werden kann
+# Beim Herunterfahren stoppt systemd die Dienste in umgekehrter Startreihenfolge.
+# "Before=inkypi.service" heißt beim Start "vor InkyPi" – beim Herunterfahren also
+# "nach InkyPi": Erst ist InkyPi beendet und das Display frei, dann läuft ExecStop.
+# Die Speicherkarte ist dann noch beschreibbar (Standard-Abhängigkeiten eines Dienstes).
+Before=inkypi.service
+
+[Service]
+Type=oneshot
+# Beim Start passiert nichts; der Dienst gilt danach als "aktiv" und wird deshalb
+# beim Herunterfahren gestoppt – und genau dabei läuft ExecStop.
+RemainAfterExit=yes
+ExecStart=/bin/true
+ExecStop=/usr/local/inkypi/venv_inkypi/bin/python -u /usr/local/inkypi-ausschaltbild/ausschaltbild.py --beim-ausschalten
+# Ein volles Bild auf dem Spectra-6-Display dauert bis etwa 30 Sekunden
+TimeoutStopSec=90
+
+[Install]
+WantedBy=multi-user.target

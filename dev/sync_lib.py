@@ -1,6 +1,6 @@
 """Verteilt gemeinsam genutzte Module auf die Plugins.
 
-shared/eink.py      -> in alle drei Plugins
+shared/eink.py      -> in alle drei Plugins und ins Ausschaltbild
 shared/zeichensatz.py -> in alle drei Plugins
 dwd_wetter/...      -> tagesdashboard/lib/
 nextcloud_kalender/ -> tagesdashboard/lib/
@@ -23,6 +23,7 @@ FILES = [
     ("shared/eink.py", "dwd_wetter/eink.py"),
     ("shared/eink.py", "nextcloud_kalender/eink.py"),
     ("shared/eink.py", "tagesdashboard/lib/eink.py"),
+    ("shared/eink.py", "ausschaltbild/eink.py"),          # Zusatz Ausschaltbild (kein Plugin)
     ("shared/zeichensatz.py", "dwd_wetter/zeichensatz.py"),
     ("shared/zeichensatz.py", "nextcloud_kalender/zeichensatz.py"),
     ("shared/zeichensatz.py", "tagesdashboard/lib/zeichensatz.py"),

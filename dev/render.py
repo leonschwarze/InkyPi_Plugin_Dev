@@ -10,6 +10,7 @@ Beispiele:
   python dev/render.py tagesdashboard --time "2026-11-11 07:20" --news ohnega   # Nachrichten, GA-Feed fehlt
   python dev/render.py tagesdashboard --air schlecht --scenario trocken          # Luftqualität (Bürgersensoren)
   python dev/render.py tagesdashboard --fail kalender --radar down --seit 9:10   # Statusanzeige: Ausfall seit 9:10
+  python dev/render.py tagesdashboard --gestern -4                              # „4° kälter als gestern“
 
 Ablauf:
   * verlinkt die Plugin-Ordner dieses Repos nach <InkyPi>/src/plugins/ (falls noch nicht vorhanden)
@@ -116,6 +117,10 @@ def main():
                     help="Luftqualität simulieren (dev/mock_luft.py); die Feuchte kommt aus --scenario (herbst 82 %%, trocken 62 %%)")
     ap.add_argument("--pollen", default="gut", choices=["gut", "gering", "mittel", "hoch", "uebergang", "ausfall"],
                     help="Tagesdashboard: Pollenflug simulieren (dev/mock_pollen.py)")
+    ap.add_argument("--gestern", type=float, metavar="GRAD",
+                    help="Tagesdashboard: Vergleich mit dem Vortag simulieren, z. B. -4 = Luft heute 4° kälter als gestern "
+                         "(abends ab switchHour: morgen gegenüber heute). Angezeigt wird der Unterschied der gefühlten "
+                         "Temperatur – mit Windchill unter 10 °C oft größer")
     ap.add_argument("--display", default="inky", choices=["inky", "mock"])
     ap.add_argument("--font", default="eink", choices=["eink", "mono", "aa"])
     ap.add_argument("--inky-saturation", type=float, default=0.5)
@@ -137,7 +142,13 @@ def main():
     now = datetime.strptime(args.time, "%Y-%m-%d %H:%M").replace(tzinfo=TZ)
 
     import mock_brightsky
-    mock_brightsky.install(now, args.scenario, fail=args.fail == "wetter", fail_uv=args.fail == "uv")
+    shift = None
+    if args.gestern:
+        # Tagsüber wird der Vortag verschoben (heute bleibt wie immer), abends der morgige Tag
+        switch = next((kv.split("=", 1)[1] for kv in args.set if kv.startswith("switchHour=")), "20")
+        evening = switch.isdigit() and now.hour >= int(switch)
+        shift = {1: args.gestern} if evening else {-1: -args.gestern}
+    mock_brightsky.install(now, args.scenario, fail=args.fail == "wetter", fail_uv=args.fail == "uv", shift=shift)
     if args.train:
         import mock_bahn
         mock_bahn.install(now, args.train)

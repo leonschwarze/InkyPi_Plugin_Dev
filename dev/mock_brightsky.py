@@ -24,11 +24,14 @@ import requests
 _real_get = requests.Session.get
 
 
-def hourly(now, scenario="herbst"):
+def hourly(now, scenario="herbst", shift=None):
+    """shift = {Tag: Grad}, verschiebt die Temperatur eines Tages (für „4° kälter als gestern“, seit 1.22)."""
     tz = now.tzinfo
-    start = datetime.combine(now.date() - timedelta(days=1), datetime.min.time(), tz) + timedelta(hours=21)
+    # ab gestern 0 Uhr: das Tagesdashboard vergleicht seit 1.22 mit dem Vortag (Tag -1 = Beobachtungen)
+    start = datetime.combine(now.date() - timedelta(days=1), datetime.min.time(), tz)
+    shift = shift or {}
     recs = []
-    for h in range(8 * 24 + 6):
+    for h in range(8 * 24 + 27):  # Ende wie bisher (Tag 7, 3 Uhr)
         dt = start + timedelta(hours=h)
         day = (dt.date() - now.date()).days
         hour = dt.hour
@@ -38,7 +41,7 @@ def hourly(now, scenario="herbst"):
             base, amp = 24 + (day % 3), 7
         else:
             base, amp = 8 - day * 0.3, 3.5
-        temp = base + amp * math.sin((hour - 9) / 24 * 2 * math.pi)
+        temp = base + amp * math.sin((hour - 9) / 24 * 2 * math.pi) + shift.get(day, 0)
         is_day = 7 <= hour < 17
         cloud, precip, prob, sunshine = 60, 0, 10, 0
         icon = "partly-cloudy-day" if is_day else "partly-cloudy-night"
@@ -147,7 +150,7 @@ class _Resp:
         return self._data
 
 
-def install(now, scenario="herbst", fail=False, fail_uv=False):
+def install(now, scenario="herbst", fail=False, fail_uv=False, shift=None):
     """Leitet Bright-Sky- und DWD-UV-Anfragen auf die simulierten Daten um."""
     def fake_get(session, url, params=None, timeout=None, **kw):
         if "opendata.dwd.de" in url and url.endswith("uvi.json"):
@@ -156,7 +159,7 @@ def install(now, scenario="herbst", fail=False, fail_uv=False):
             if fail:
                 raise requests.ConnectionError("simulierter Ausfall")
             if url.endswith("/weather"):
-                return _Resp(hourly(now, scenario))
+                return _Resp(hourly(now, scenario, shift))
             if url.endswith("/current_weather"):
                 return _Resp(current(now, scenario))
             if url.endswith("/alerts"):

@@ -67,6 +67,8 @@ def hourly(now, scenario="herbst", shift=None):
             icon, cloud, precip, prob = "fog", 100, 0, 10
         if scenario == "bedeckt" and day == 1:
             icon, cloud = "cloudy", 95
+        if scenario == "regenbogen" and day == 0 and 14 <= hour <= 16:  # Schauer bei Sonne (Ostereier: Regenbogen)
+            icon, cloud, precip, prob, sunshine = "rain", 60, 0.4, 60, 25
         if scenario == "winter" and icon == "rain":
             icon = "snow"
         if is_day and cloud < 80 and day != 1:

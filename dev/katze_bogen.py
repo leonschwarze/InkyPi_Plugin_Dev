@@ -1,6 +1,7 @@
 """Alle Posen der Dashboard-Katze auf einem Bogen: groß (4×) zum Beurteilen, darunter in Displaygröße.
 
-    python dev/katze_bogen.py      # → dev/out/katze/posen.png
+    python dev/katze_bogen.py              # → dev/out/katze/posen.png (ohne Ostereier – Vorlage für docs/katze_posen.png)
+    python dev/katze_bogen.py --ostereier  # → dev/out/katze/posen_ostereier.png (mit den geheimen Ostereier-Posen)
 
 Die Strichstärke ist wie im Dashboard 0,3 × --u; groß gerendert ist --u = 32 px, also wirkt die
 Linie im Verhältnis genauso dick wie auf dem Display.
@@ -26,7 +27,11 @@ def main():
     css = CSS_FILE.read_text(encoding="utf-8")
     cat_css = css[css.index("/* ---------------- Katze"):]
     cells = ""
+    eggs = "--ostereier" in sys.argv
+    name_out = "posen_ostereier.png" if eggs else "posen.png"
     for name in katze.POSES:
+        if name in katze.EGG_POSES and not eggs:
+            continue
         p = katze.pose(name)
         style = f'style="--w:{p["w"]};--h:{p["h"]}"'
         cells += (f'<div class="c"><div class="cat-box big" {style}>{p["svg"]}</div>'
@@ -49,9 +54,9 @@ def main():
         browser = pw.chromium.launch(executable_path=exe)
         page = browser.new_page(viewport={"width": 1400, "height": 900})
         page.set_content(html)
-        page.screenshot(path=str(out / "posen.png"), full_page=True)
+        page.screenshot(path=str(out / name_out), full_page=True)
         browser.close()
-    print(out / "posen.png")
+    print(out / name_out)
 
 
 if __name__ == "__main__":

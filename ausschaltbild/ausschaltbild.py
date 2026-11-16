@@ -19,6 +19,9 @@ Aufrufe:
       [--size 800x480] [--vertical] [--time "2026-11-15 22:14"]
   ausschaltbild.py --probe              Prüfung bei der Installation: Einstellungen, Schrift,
                                         Treiber vorhanden? Bild nach /tmp
+  ausschaltbild.py --nach-dem-start     vom Dienst inkypi-ausschaltbild-start.service: sobald
+                                        InkyPi läuft, sofort neu zeichnen lassen (sonst erst nach
+                                        einem ganzen Takt) – man sieht, dass der Pi wieder läuft
 
 Dieses Skript darf das Herunterfahren nie aufhalten: Jeder Fehler wird nur protokolliert
 (journalctl -u inkypi-ausschaltbild, dazu die Datei letzter-lauf.txt neben dem Skript).
@@ -40,13 +43,14 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import eink  # noqa: E402  (Kopie von shared/eink.py, siehe dev/sync_lib.py)
 
-VERSION = "1.0"
+VERSION = "1.1"
 INKYPI = Path("/usr/local/inkypi")
 DEVICE_JSON = INKYPI / "src" / "config" / "device.json"
 FONT_DIRS = [INKYPI / "src" / "static" / "fonts", HERE]
 FONT_NAME = "Jost-SemiBold.ttf"          # Jost 600 wie im Dashboard
 FONT_FALLBACK = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
 LOG_FILE = HERE / "letzter-lauf.txt"
+LOG_KEEP = 200
 
 # Gestaltungsfarben (wie im Dashboard); eink.py rastet sie auf die Displayfarben ein
 BLACK = (0, 0, 0)
@@ -394,9 +398,9 @@ def show(img):
 def log(msg):
     line = f"{datetime.now():%Y-%m-%d %H:%M:%S} {msg}"
     print(line, flush=True)
-    try:
-        with open(LOG_FILE, "a") as f:
-            f.write(line + "\n")
+    try:                                 # nur die letzten LOG_KEEP Zeilen behalten
+        old = LOG_FILE.read_text().splitlines()[-(LOG_KEEP - 1):] if LOG_FILE.exists() else []
+        LOG_FILE.write_text("\n".join(old + [line]) + "\n")
     except OSError:
         pass
 
@@ -408,6 +412,101 @@ def draw_now(cfg, when):
     display.set_image(img, saturation=cfg["saturation"])
     display.show()                       # wartet, bis das Display fertig ist (bis ~30 s)
     log(f"Ausschaltbild gezeichnet in {time.monotonic() - t0:.1f} s")
+
+
+# ---------------------------------------------------------------- nach dem Start sofort neu zeichnen
+
+# InkyPis Hintergrund-Thread wartet nach dem Start zuerst einen ganzen Takt (bei Leon 15 min),
+# bevor er das erste Mal zeichnet (refresh_task.py: condition.wait(timeout=sleep_time) am Anfang
+# der Schleife). Bis dahin stünde das Ausschaltbild bzw. ein altes Bild auf dem Display. Der Dienst
+# inkypi-ausschaltbild-start.service (WantedBy=inkypi.service) startet deshalb mit InkyPi und löst
+# dasselbe aus wie der Knopf „Display“ in InkyPis Playlist: POST /display_plugin_instance.
+INKYPI_URL = "http://127.0.0.1:80"
+SERVER_WAIT = 180        # s, bis die Weboberfläche antwortet (Pi Zero braucht beim Start lange)
+REQUEST_TIMEOUT = 240    # s, InkyPi antwortet erst, wenn das Display fertig ist
+RETRIES = 3              # Versuche, falls das Plugin beim Start noch kein Netz hat
+RETRY_PAUSE = 30         # s zwischen den Versuchen
+
+
+def active_instance(device, now):
+    """Welche Instanz zeigt InkyPi gerade? Wie PlaylistManager.determine_active_playlist: aktive
+    Playlists (start ≤ jetzt < end, auch über Mitternacht), die kürzeste gewinnt; darin die Instanz
+    am current_plugin_index (die zuletzt gezeigte), sonst die erste. -> (Playlist, Plugin-ID, Name).
+    Wie InkyPi zählt auch eine aktive Playlist ohne Plugins (InkyPi zeigt dann nichts) – wir springen
+    nicht auf eine andere Playlist aus, sonst stünde ein Bild da, das InkyPi um diese Zeit nie zeigt."""
+    hm = now.strftime("%H:%M")
+
+    def active(p):
+        start, end = p.get("start_time", "00:00"), p.get("end_time", "24:00")
+        return start <= hm < end if start <= end else (hm >= start or hm < end)
+
+    def minutes(p):
+        h1, m1 = map(int, p.get("start_time", "00:00").split(":"))
+        h2, m2 = map(int, p.get("end_time", "24:00").split(":"))
+        d = (h2 * 60 + m2) - (h1 * 60 + m1)
+        return d if d > 0 else d + 24 * 60
+
+    playlists = ((device.get("playlist_config") or {}).get("playlists")) or []
+    candidates = sorted((p for p in playlists if active(p)), key=minutes)
+    if not candidates or not candidates[0].get("plugins"):
+        return None
+    p = candidates[0]
+    idx = p.get("current_plugin_index")
+    inst = p["plugins"][idx] if isinstance(idx, int) and 0 <= idx < len(p["plugins"]) else p["plugins"][0]
+    return p["name"], inst["plugin_id"], inst["name"]
+
+
+def _http(url, data=None, timeout=10):
+    import urllib.request
+    req = urllib.request.Request(url, data=data, method="POST" if data is not None else "GET",
+                                 headers={"Content-Type": "application/json"} if data is not None else {})
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        return r.status, r.read().decode("utf-8", "replace")
+
+
+def wait_for_server(base, limit=SERVER_WAIT, step=3):
+    """Wartet, bis InkyPis Weboberfläche antwortet (Type=simple: „gestartet“ heißt nur „Prozess läuft“)."""
+    t_end = time.monotonic() + limit
+    while True:
+        try:
+            _http(base + "/", timeout=5)
+            return True
+        except Exception:
+            if time.monotonic() >= t_end:
+                return False
+            time.sleep(step)
+
+
+def redraw_after_start(device_path=DEVICE_JSON, base=INKYPI_URL, retries=RETRIES, pause=RETRY_PAUSE,
+                       server_wait=SERVER_WAIT):
+    import urllib.error
+    if not wait_for_server(base, server_wait):
+        log(f"Nach dem Start: InkyPi antwortet nach {server_wait} s nicht – es zeichnet beim nächsten Takt")
+        return False
+    device = load_device(device_path)   # erst jetzt lesen: InkyPi schreibt beim Start in device.json
+    cfg = settings_of(device)
+    target = active_instance(device, local_now(cfg["timezone"]))
+    if not target:
+        log("Nach dem Start: keine aktive Playlist mit Plugins – nichts zu zeichnen")
+        return False
+    playlist, plugin_id, name = target
+    body = json.dumps({"playlist_name": playlist, "plugin_id": plugin_id, "plugin_instance": name}).encode()
+    for attempt in range(1, retries + 1):
+        t0 = time.monotonic()
+        try:
+            _http(base + "/display_plugin_instance", body, timeout=REQUEST_TIMEOUT)
+            log(f"Nach dem Start neu gezeichnet: {name} ({plugin_id}, Playlist {playlist}) "
+                f"in {time.monotonic() - t0:.1f} s")
+            return True
+        except urllib.error.HTTPError as e:
+            reason = e.read().decode("utf-8", "replace")[:200].strip()
+        except Exception as e:
+            reason = f"{type(e).__name__}: {e}"
+        log(f"Nach dem Start: Versuch {attempt}/{retries} fehlgeschlagen ({reason})")
+        if attempt < retries:
+            time.sleep(pause)
+    log("Nach dem Start: aufgegeben – InkyPi zeichnet beim nächsten Takt")
+    return False
 
 
 def inkypi_active():
@@ -425,6 +524,8 @@ def main(argv=None):
     mode.add_argument("--zeigen", action="store_true", help="sofort aufs Display (InkyPi vorher stoppen)")
     mode.add_argument("--png", metavar="DATEI", help="nur als PNG speichern")
     mode.add_argument("--probe", action="store_true", help="Prüfung bei der Installation")
+    mode.add_argument("--nach-dem-start", action="store_true",
+                      help="vom Dienst inkypi-ausschaltbild-start: InkyPi sofort neu zeichnen lassen")
     ap.add_argument("--size", help="z. B. 800x480 (nur mit --png; sonst aus device.json)")
     ap.add_argument("--vertical", action="store_true", help="hochkant (nur mit --png)")
     ap.add_argument("--time", help='Zeitpunkt, z. B. "2026-11-15 22:14" (nur mit --png)')
@@ -442,6 +543,13 @@ def main(argv=None):
         img = build(*logical_size(cfg), when)
         eink.snap(img, 0.5).save(a.png)     # in Leserichtung, reine Farben
         print(f"gespeichert: {a.png} {img.size}")
+        return 0
+
+    if a.nach_dem_start:
+        try:
+            redraw_after_start(a.device)
+        except Exception as e:  # nie mit Fehler enden: systemd würde sonst „failed“ melden
+            log(f"Nach dem Start: Fehler: {type(e).__name__}: {e}")
         return 0
 
     if a.probe:

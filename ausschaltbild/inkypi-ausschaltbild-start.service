@@ -1,0 +1,18 @@
+[Unit]
+Description=InkyPi-Ausschaltbild: nach dem Start von InkyPi sofort neu zeichnen
+# InkyPi wartet nach dem Start erst einen ganzen Takt, bevor es zeichnet. Dieser Dienst
+# startet mit InkyPi (WantedBy=inkypi.service unten) – beim Hochfahren, bei
+# "systemctl restart inkypi.service" und nach einem Absturz – und lässt InkyPi sofort zeichnen.
+After=inkypi.service
+# Wird InkyPi gestoppt, bricht auch ein noch wartender Versuch ab.
+PartOf=inkypi.service
+
+[Service]
+# "exec" statt "oneshot": Sonst würde "systemctl restart inkypi.service" im Terminal warten,
+# bis das Display fertig ist. So läuft das Neuzeichnen im Hintergrund.
+Type=exec
+ExecStart=/usr/local/inkypi/venv_inkypi/bin/python -u /usr/local/inkypi-ausschaltbild/ausschaltbild.py --nach-dem-start
+TimeoutStopSec=10
+
+[Install]
+WantedBy=inkypi.service

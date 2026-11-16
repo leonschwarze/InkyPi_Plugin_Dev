@@ -10,7 +10,8 @@ fi
 # Stoppen löst ExecStop aus – das Skript erkennt aber, dass nicht ausgeschaltet wird,
 # und lässt das Display in Ruhe.
 systemctl disable --now inkypi-ausschaltbild.service 2>/dev/null || true
-rm -f /etc/systemd/system/inkypi-ausschaltbild.service
+systemctl disable --now inkypi-ausschaltbild-start.service 2>/dev/null || true
+rm -f /etc/systemd/system/inkypi-ausschaltbild.service /etc/systemd/system/inkypi-ausschaltbild-start.service
 rm -rf /usr/local/inkypi-ausschaltbild
 systemctl daemon-reload
 echo "Ausschaltbild entfernt."

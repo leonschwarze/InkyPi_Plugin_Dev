@@ -11,6 +11,7 @@ import os
 import re
 import sys
 import tempfile
+import time
 import types
 from datetime import datetime
 from pathlib import Path
@@ -190,6 +191,131 @@ check("Fehler: ValueError" in logtext and "gezeichnet in" in logtext, "Protokoll
 code, calls, h = run(["--beim-ausschalten"], POWEROFF, resolution=[800, 480], orientation="vertical",
                      image_settings={"inky_saturation": 0.7})
 check(("image", (800, 480), 0.7) in calls, "hochkant: Bild für das Panel gedreht, Sättigung aus device.json")
+
+# ---------------------------------------------------------------- nach dem Start neu zeichnen (seit 1.1)
+
+
+def inst(pid, name):
+    return {"plugin_id": pid, "name": name, "plugin_settings": {}, "refresh": {"interval": 900}}
+
+
+PLAYLISTS = {"playlist_config": {"playlists": [
+    {"name": "Nacht", "start_time": "23:00", "end_time": "06:00", "plugins": [inst("tagesdashboard", "Nachts")],
+     "current_plugin_index": None},
+    {"name": "Leer", "start_time": "07:00", "end_time": "08:00", "plugins": []},
+    {"name": "Default", "start_time": "00:00", "end_time": "24:00",
+     "plugins": [inst("tagesdashboard", "Dashboard"), inst("clock", "Uhr")], "current_plugin_index": 1}]}}
+
+
+def at(hm):
+    return datetime(2026, 11, 15, *map(int, hm.split(":")))
+
+
+check(aus.active_instance(PLAYLISTS, at("21:25")) == ("Default", "clock", "Uhr"),
+      "Instanz: aktive Playlist, zuletzt gezeigte Instanz (current_plugin_index)")
+check(aus.active_instance(PLAYLISTS, at("23:30"))[0] == "Nacht" and aus.active_instance(PLAYLISTS, at("5:59"))[0] == "Nacht",
+      "über Mitternacht: kürzere Playlist gewinnt (wie InkyPi), 23:30 und 5:59")
+check(aus.active_instance(PLAYLISTS, at("6:00"))[0] == "Default", "6:00 gehört nicht mehr zu 23:00–06:00")
+check(aus.active_instance(PLAYLISTS, at("7:30")) is None,
+      "aktive Playlist ohne Plugins → nichts (wie InkyPi, kein Ausweichen auf eine andere Playlist)")
+check(aus.active_instance(PLAYLISTS, at("23:30"))[2] == "Nachts", "current_plugin_index None → erste Instanz")
+bad = json.loads(json.dumps(PLAYLISTS))
+bad["playlist_config"]["playlists"][2]["current_plugin_index"] = 7
+check(aus.active_instance(bad, at("12:00"))[2] == "Dashboard", "Index außerhalb → erste Instanz")
+check(aus.active_instance({}, at("12:00")) is None, "keine Playlists → nichts")
+
+# Gegen InkyPis eigene Auswahl (model.PlaylistManager)
+from model import PlaylistManager  # noqa: E402
+
+pm = PlaylistManager.from_dict(PLAYLISTS["playlist_config"])
+
+
+def inkypi_shows(t):
+    """InkyPi: aktive Playlist, aber ohne Plugins zeigt es nichts (_determine_next_plugin)."""
+    p = pm.determine_active_playlist(at(t))
+    return p.name if p and p.plugins else None
+
+
+def ours(t):
+    r = aus.active_instance(PLAYLISTS, at(t))
+    return r[0] if r else None
+
+
+same = all(ours(t) == inkypi_shows(t) for t in ("0:00", "5:59", "6:00", "7:30", "12:00", "22:59", "23:00", "23:59"))
+check(same, "Playlist-Wahl gleich wie InkyPis determine_active_playlist (8 Uhrzeiten)")
+
+# Ablauf gegen einen kleinen Schein-Server
+import http.server  # noqa: E402
+import threading  # noqa: E402
+
+
+class Fake(http.server.BaseHTTPRequestHandler):
+    fails_left = 0
+    posts = []
+
+    def log_message(self, *a):
+        pass
+
+    def do_GET(self):
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b"ok")
+
+    def do_POST(self):
+        body = self.rfile.read(int(self.headers["Content-Length"]))
+        Fake.posts.append((self.path, json.loads(body)))
+        if Fake.fails_left:
+            Fake.fails_left -= 1
+            self.send_response(500)
+            self.end_headers()
+            self.wfile.write(b'{"error": "Wetter nicht erreichbar"}')
+        else:
+            self.send_response(200)
+            self.end_headers()
+            self.wfile.write(b'{"success": true}')
+
+
+srv = http.server.HTTPServer(("127.0.0.1", 0), Fake)
+threading.Thread(target=srv.serve_forever, daemon=True).start()
+base = f"http://127.0.0.1:{srv.server_port}"
+dev_path = device_file(**PLAYLISTS)
+aus.LOG_FILE.write_text("")
+
+Fake.fails_left, Fake.posts = 1, []
+ok = aus.redraw_after_start(dev_path, base=base, retries=3, pause=0)
+check(ok and len(Fake.posts) == 2, "erster Versuch scheitert (Plugin ohne Netz), zweiter klappt")
+path, payload = Fake.posts[-1]
+check(path == "/display_plugin_instance" and set(payload) == {"playlist_name", "plugin_id", "plugin_instance"},
+      f"Anfrage wie InkyPis Knopf „Display“: {payload}")
+logtext = aus.LOG_FILE.read_text()
+check("Versuch 1/3 fehlgeschlagen (" in logtext and "Wetter nicht erreichbar" in logtext
+      and "Nach dem Start neu gezeichnet" in logtext, "Protokoll nennt Fehlschlag mit Grund und Erfolg")
+
+Fake.fails_left, Fake.posts = 5, []
+check(aus.redraw_after_start(dev_path, base=base, retries=2, pause=0) is False and len(Fake.posts) == 2,
+      "nach allen Versuchen aufgeben (kein Endlos-Versuch)")
+srv.shutdown()
+t0 = time.monotonic()
+check(aus.redraw_after_start(dev_path, base=base, server_wait=1) is False and time.monotonic() - t0 < 10,
+      "InkyPi antwortet nicht → nach der Wartezeit aufgeben")
+code = aus.main(["--nach-dem-start", "--device", str(TMP / "fehlt.json")])
+check(code == 0, "--nach-dem-start endet nie mit Fehler (sonst „failed“ in systemd)")
+
+aus.LOG_FILE.write_text("".join(f"Zeile {i}\n" for i in range(300)))
+aus.log("neu")
+lines = aus.LOG_FILE.read_text().splitlines()
+check(len(lines) == aus.LOG_KEEP and lines[-1].endswith("neu") and lines[0] == "Zeile 101",
+      f"Protokoll behält die letzten {aus.LOG_KEEP} Zeilen")
+
+# Dienst-Dateien und Installation
+unit = (ROOT / "ausschaltbild" / "inkypi-ausschaltbild-start.service").read_text()
+check("WantedBy=inkypi.service" in unit and "After=inkypi.service" in unit and "Type=exec" in unit
+      and "--nach-dem-start" in unit, "Start-Dienst: mit InkyPi, danach, ohne das Terminal zu blockieren")
+inst_sh = (ROOT / "ausschaltbild" / "install.sh").read_text()
+check('"$DIENST" "$START" /etc/systemd/system/' in inst_sh and 'systemctl enable "$START"' in inst_sh
+      and "enable --now \"$START\"" not in inst_sh, "install.sh kopiert und aktiviert beide Dienste (Start-Dienst ohne --now)")
+check("inkypi-ausschaltbild-start.service" in (ROOT / "ausschaltbild" / "uninstall.sh").read_text(),
+      "uninstall.sh entfernt beide Dienste")
 
 print(f"\n{'Alles ok.' if not fails else f'{fails} Fehler.'}")
 sys.exit(1 if fails else 0)

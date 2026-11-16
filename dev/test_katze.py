@@ -148,6 +148,31 @@ def main():
     starts = {katze.occasion_slot(datetime(2026, 11, d, 6, 0, tzinfo=TZ)) for d in range(1, 15)}
     check(starts == {True, False}, "welcher Takt beginnt, wechselt von Tag zu Tag")
 
+    print("Ratssitzung (seit 1.27)")
+    session = datetime(2026, 11, 12, 17, 0, tzinfo=TZ)
+    slots = [session + timedelta(minutes=15 * i) for i in range(20)]           # 17–22 Uhr
+    picks = [katze.choose(t, occasions=["rat"]) for t in slots]
+    rat = [c for c in picks if c["reason"] == "rat"]
+    check(len(rat) == 10, f"Ratssitzung jedes zweite Mal ({len(rat)} von 20)")
+    check(all((c["main"]["name"] == "akten") == (t.hour >= katze.RAT_LATE_HOUR)
+              for t, c in zip(slots, picks) if c["reason"] == "rat"), "vor 21 Uhr Rednerpult, ab 21 Uhr nur Akten")
+    check({c["main"]["name"] for c in rat} == {"rednerpult", "akten"}, "beide Posen kommen vor")
+    occ = next(t for t in slots if katze.occasion_slot(t))
+    plain = next(t for t in slots if not katze.occasion_slot(t))
+    c = katze.choose(occ, rain(occ), occasions=["rat"], feels_like=feels_like)
+    check(c["main"]["name"] == "rednerpult", "Ratssitzung geht dem Wetter vor (Anlass-Takt, Regen)")
+    check(c["spots"][0] == "kopf", "Rednerpult braucht Höhe → zuerst die Kopfzeile")
+    c = katze.choose(plain, rain(plain), occasions=["rat"], feels_like=feels_like)
+    check(c["main"]["name"] == "schirm", "im anderen Takt gilt das Wetter")
+    c = katze.choose(occ, occasions=["rat"], egg="narr")
+    check(c["main"]["name"] == "rednerpult", "Ratssitzung geht dem Osterei vor (Anlass-Takt)")
+    check(katze.choose(plain, occasions=["rat"], egg="narr")["main"]["name"] == "narr", "… im anderen Takt das Osterei")
+    c = katze.choose(occ, occasions=["rat", "geburtstag", "waesche"])
+    check(c["main"]["name"] == "partyhut", "Geburtstag geht der Ratssitzung vor")
+    c = katze.choose(occ, occasions=["rat", "waesche"])
+    check(c["main"]["name"] == "rednerpult", "Ratssitzung geht der Wäsche-Karte vor")
+    check(not {"rednerpult", "akten"} & set(katze.EVERYDAY), "Ratssitzungs-Posen kommen nie im Alltag")
+
     print("Zeichnungen")
     for name in katze.POSES:
         p = katze.pose(name)

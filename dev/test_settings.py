@@ -191,6 +191,24 @@ DB_CASES = {
                                  "urlaubEnabled": "true", "urlaubWords": "Urlaub, Dienstreise", "urlaubMinDays": "3",
                                  "wahlEnabled": "true", "wahlArt": "bundestag", "wahlTag": "2031-01-01",
                                  "wahlWords": "Infostand, Plakat", "issEnabled": None},
+    # 1.25: Livestream-Karte während einer Ratssitzung (cfgVersion 20)
+    "v19 Livestream noch unbekannt": {**DB_9, "cfgVersion": "19", "radarEnabled": "true", "airEnabled": "true",
+                                      "trainRoute": "true", "catEnabled": "true", "catWeather": "true",
+                                      "catNight": "true", "pollenEnabled": "true", "nightArt": "true",
+                                      "meteorEnabled": "true", "eclipseEnabled": "true", "planetEnabled": "true",
+                                      "urlaubEnabled": "true", "wahlEnabled": "true", "issEnabled": "true"},
+    "v20 Livestream aus": {**DB_9, "cfgVersion": "20", "radarEnabled": "true", "airEnabled": "true",
+                           "trainRoute": "true", "catEnabled": "true", "catWeather": "true", "catNight": "true",
+                           "pollenEnabled": "true", "nightArt": "true", "meteorEnabled": "true",
+                           "eclipseEnabled": "true", "planetEnabled": "true", "urlaubEnabled": "true",
+                           "wahlEnabled": "true", "issEnabled": "true", "liveEnabled": None},
+    "v20 Livestream eigene Werte": {**DB_9, "cfgVersion": "20", "radarEnabled": "true", "airEnabled": "true",
+                                    "trainRoute": "true", "catEnabled": "true", "catWeather": "true",
+                                    "catNight": "true", "pollenEnabled": "true", "nightArt": "true",
+                                    "meteorEnabled": "true", "eclipseEnabled": "true", "planetEnabled": "true",
+                                    "urlaubEnabled": "true", "wahlEnabled": "true", "issEnabled": "true",
+                                    "liveEnabled": "true", "liveWords": "Ratssitzung, Bezirksvertretung",
+                                    "liveUrl": "https://www.youtube.com/@bundesstadtbonn/live"},
 }
 
 

@@ -209,6 +209,19 @@ DB_CASES = {
                                     "urlaubEnabled": "true", "wahlEnabled": "true", "issEnabled": "true",
                                     "liveEnabled": "true", "liveWords": "Ratssitzung, Bezirksvertretung",
                                     "liveUrl": "https://www.youtube.com/@bundesstadtbonn/live"},
+    # 1.28: Rhein auf echtem Pegel, Zustand des Pi (cfgVersion 21)
+    "v20 Pegel und Pi noch unbekannt": {**DB_9, "cfgVersion": "20", "radarEnabled": "true", "airEnabled": "true",
+                                        "trainRoute": "true", "catEnabled": "true", "catWeather": "true",
+                                        "catNight": "true", "pollenEnabled": "true", "nightArt": "true",
+                                        "meteorEnabled": "true", "eclipseEnabled": "true", "planetEnabled": "true",
+                                        "urlaubEnabled": "true", "wahlEnabled": "true", "issEnabled": "true",
+                                        "liveEnabled": "true"},
+    "v21 Pegel und Pi aus": {**DB_9, "cfgVersion": "21", "radarEnabled": "true", "airEnabled": "true",
+                             "trainRoute": "true", "catEnabled": "true", "catWeather": "true", "catNight": "true",
+                             "pollenEnabled": "true", "nightArt": "true", "meteorEnabled": "true",
+                             "eclipseEnabled": "true", "planetEnabled": "true", "urlaubEnabled": "true",
+                             "wahlEnabled": "true", "issEnabled": "true", "liveEnabled": "true",
+                             "pegelEnabled": None, "piEnabled": None},
 }
 
 

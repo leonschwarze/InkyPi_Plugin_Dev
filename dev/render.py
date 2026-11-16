@@ -124,6 +124,10 @@ def main():
     ap.add_argument("--iss", choices=["abend", "morgen", "keine", "echt"],
                     help="Tagesdashboard: ISS-Überflug festlegen (abend/morgen/keine) oder mit erfundener Bahn "
                          "wirklich rechnen (echt, dev/mock_ziel.py)")
+    ap.add_argument("--pegel", default="keine", choices=["keine", "niedrig", "faellt", "normal", "hoch", "sehrhoch", "alt", "down"],
+                    help="Tagesdashboard: Pegel Bonn im Nachtbild simulieren (dev/mock_pegel.py); keine = Rhein wie bisher")
+    ap.add_argument("--pi", default="ok", choices=["ok", "ausfall", "warn", "leer"],
+                    help="Tagesdashboard: Zustand des Pi in der Wochenvorschau simulieren (dev/mock_pi.py)")
     ap.add_argument("--display", default="inky", choices=["inky", "mock"])
     ap.add_argument("--font", default="eink", choices=["eink", "mono", "aa"])
     ap.add_argument("--inky-saturation", type=float, default=0.5)
@@ -165,6 +169,8 @@ def main():
     mock_luft.install(now, args.air)
     import mock_pollen  # Pollen immer simulieren (Standard: gut, dann bleibt das Bild wie bisher)
     mock_pollen.install(now, args.pollen)
+    import mock_pegel  # Pegel immer simulieren (Standard: keine Daten, dann bleibt der Rhein wie bisher)
+    mock_pegel.install(now, args.pegel)
 
     settings = dict(BASE_SETTINGS)
     env = {}
@@ -184,6 +190,9 @@ def main():
     if args.plugin == "tagesdashboard":
         import mock_ziel  # Reiseziel-Wetter und Celestrak immer simulieren (nie echtes Netz)
         mock_ziel.install(now)
+    if args.plugin == "tagesdashboard":
+        import mock_pi  # Zustand des Pi immer simulieren (sonst stünde der Entwicklungsrechner im Bild)
+        mock_pi.install(now, args.pi, __import__("plugins.tagesdashboard.pizustand", fromlist=["x"]))
     if args.iss and args.iss != "echt" and args.plugin == "tagesdashboard":
         import mock_iss
         mock_iss.install(now, args.iss)
@@ -220,6 +229,10 @@ def main():
         tag += f"_pollen-{args.pollen}"
     if args.iss:
         tag += f"_iss-{args.iss}"
+    if args.pegel != "keine":
+        tag += f"_pegel-{args.pegel}"
+    if args.pi != "ok":
+        tag += f"_pi-{args.pi}"
     if args.seit:
         tag += f"_seit-{args.seit.replace(':', '').replace('gestern ', 'g')}"
     if args.display == "mock" or args.font != "eink":

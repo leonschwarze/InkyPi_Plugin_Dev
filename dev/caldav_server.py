@@ -44,6 +44,30 @@ def _free_port():
         return s.getsockname()[1]
 
 
+MAILTO = "mailto:leon@example.org"  # eigene Adresse in den Testeinladungen
+
+
+def with_mailto(app):
+    """Radicale nennt unter calendar-user-address-set nur die Principal-Adresse. Nextcloud
+    zusätzlich die E-Mail des Kontos – diese Hülle ergänzt sie wie Nextcloud."""
+    def wrapped(environ, start_response):
+        if environ.get("REQUEST_METHOD") != "PROPFIND":
+            return app(environ, start_response)
+        environ = dict(environ, HTTP_ACCEPT_ENCODING="identity")  # sonst kommt gzip, die Ersetzung fände nichts
+        held = {}
+
+        def keep(status, headers, exc_info=None):
+            held["status"], held["headers"] = status, headers
+        body = b"".join(app(environ, keep))
+        tag = b"calendar-user-address-set>"
+        if tag in body:
+            body = body.replace(b":" + tag, b":" + tag + b"<href>" + MAILTO.encode() + b"</href>", 1)
+        headers = [(k, str(len(body)) if k.lower() == "content-length" else v) for k, v in held["headers"]]
+        start_response(held["status"], headers)
+        return [body]
+    return wrapped
+
+
 def start(base: date):
     import radicale
     from radicale import config as rconfig
@@ -59,7 +83,8 @@ def start(base: date):
         "storage": {"filesystem_folder": str(tmp / "data")},
         "rights": {"type": "owner_only"},
     }, "test", privileged=True)
-    app = DispatcherMiddleware(Response("Nextcloud-Attrappe", 200), {"/remote.php/dav": radicale.Application(conf)})
+    app = DispatcherMiddleware(Response("Nextcloud-Attrappe", 200),
+                               {"/remote.php/dav": with_mailto(radicale.Application(conf))})
     import logging
     logging.getLogger("werkzeug").setLevel(logging.WARNING)  # keine Zeile pro Anfrage
     logging.getLogger("radicale").setLevel(logging.WARNING)  # keine Meldungen zum Speicherort
@@ -133,13 +158,40 @@ def seed(home, base):
     put("familie", ev("Oma Geburtstag", f"{bday:%Y%m%d}", f"{bday + timedelta(days=1):%Y%m%d}",
                       allday=True, extra="\nRRULE:FREQ=YEARLY"))
     put("aufgaben", "BEGIN:VTODO\nUID:X\nDTSTAMP:20260101T000000Z\nSUMMARY:Steuer\nEND:VTODO")
+    import os
+    proto = os.environ.get("DEV_PROTO", "")
+    # Einladungen, die Leon abgelehnt hat (eigener ATTENDEE mit PARTSTAT=DECLINED): müssen fehlen,
+    # deshalb immer dabei – jedes Bild bleibt so pixelgleich zu dem ohne diese Termine.
+    org = "\nORGANIZER;CN=Lisa:mailto:lisa@example.org"
+    put("arbeit", ev("Abgelehnt: Kreisvorstand", f"{d(0)}T190000", f"{d(0)}T210000", "Parteibüro",
+                     extra=org + f"\nATTENDEE;CN=Leon;PARTSTAT=DECLINED:{MAILTO}"
+                     + "\nATTENDEE;CN=Lisa;PARTSTAT=ACCEPTED:mailto:lisa@example.org"))
+    put("personal", ev("Abgelehnt: Sommerfest", d(1), d(2), allday=True,  # Groß-/Kleinschreibung egal
+                       extra=org + "\nATTENDEE;PARTSTAT=DECLINED:MAILTO:Leon@Example.ORG"))
+    if "einladung" in proto:
+        # Gegenproben (DEV_PROTO=einladung): Diese Termine müssen erscheinen …
+        put("arbeit", ev("Einladung zugesagt: Fraktion", f"{d(0)}T113000", f"{d(0)}T123000", "Rathaus",
+                         extra=org + f"\nATTENDEE;PARTSTAT=ACCEPTED:{MAILTO}"
+                         + "\nATTENDEE;PARTSTAT=DECLINED:mailto:anna@example.org"))   # nur Anna sagt ab
+        put("arbeit", ev("Einladung offen: Stammtisch", f"{d(1)}T193000", f"{d(1)}T210000", "Brauhaus",
+                         extra=org + f"\nATTENDEE;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:{MAILTO}"))
+        # … und von dieser täglichen Serie fehlt nur der Termin morgen (einzeln abgelehnt)
+        first = base + timedelta(days=-1)
+        skip = base + timedelta(days=1)
+        put("arbeit", ev("Serie: Morgenlage", f"{first:%Y%m%d}T083000", f"{first:%Y%m%d}T090000",
+                         extra="\nRRULE:FREQ=DAILY;COUNT=5" + org + f"\nATTENDEE;PARTSTAT=ACCEPTED:{MAILTO}") + "\n"
+            + "BEGIN:VEVENT\nUID:X\nDTSTAMP:20260101T000000Z\n"
+            + f"RECURRENCE-ID;TZID=Europe/Berlin:{skip:%Y%m%d}T083000\nSUMMARY:Serie: Morgenlage\n"
+            + f"DTSTART;TZID=Europe/Berlin:{skip:%Y%m%d}T083000\nDTEND;TZID=Europe/Berlin:{skip:%Y%m%d}T090000\n"
+            + org[1:] + f"\nATTENDEE;PARTSTAT=DECLINED:{MAILTO}\nEND:VEVENT")
     # Urlaub und Wahlkampftermine (Umgebungsvariable DEV_PROTO=urlaub,wahl, damit die übrigen Bilder gleich bleiben)
     import os
     proto = os.environ.get("DEV_PROTO", "")
     if "urlaub" in proto:
         put("familie", ev("Urlaub in Lyon", d(-2), d(6), allday=True))
-    if "rat" in proto:
-        put("arbeit", ev("Ratssitzung", f"{d(0)}T170000", f"{d(0)}T220000", "Stadthaus, Ratssaal"))
+    if "rat" in proto:  # rat-abgelehnt: dieselbe Sitzung als von Leon abgelehnte Einladung → keine Karte (seit 1.26)
+        declined = f"{org}\nATTENDEE;PARTSTAT=DECLINED:{MAILTO}" if "rat-abgelehnt" in proto else ""
+        put("arbeit", ev("Ratssitzung", f"{d(0)}T170000", f"{d(0)}T220000", "Stadthaus, Ratssaal", extra=declined))
     if "wahl" in proto:
         put("arbeit", ev("Haustürwahlkampf Beuel", f"{d(0)}T150000", f"{d(0)}T180000", "Beuel-Mitte, Treffpunkt Rathaus"))
         put("arbeit", ev("Infostand Marktplatz", f"{d(1)}T100000", f"{d(1)}T130000", "Bonner Markt"))

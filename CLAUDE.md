@@ -17,7 +17,7 @@ dwd_wetter/            Wetter vom DWD (über die Bright-Sky-API)
   dwd_wetter.py          Datenabruf, Aufbereitung, Kacheln, Stundengraph, Warnungen
   dwd_icons.py           eigenes SVG-Iconset (Wetter, Messwerte, Pfeile, Warnsymbol)
 nextcloud_kalender/    Termine per CalDAV aus Nextcloud
-  nextcloud_kalender.py  CalDAV-Client, Serientermine, Terminliste/Woche
+  nextcloud_kalender.py  CalDAV-Client, Serientermine, abgelehnte Einladungen, Terminliste/Woche
 tagesdashboard/        Wetter + Kalender auf einem Bild, eigenständig installierbar
   tagesdashboard.py      Fokus-Tag, Tageskurve, Kleidungsfenster, Regen an Terminen
   kleidung.py            Regeln und SVG-Symbole der Kleidungsempfehlung, Vergleich mit dem Vortag (seit 1.22)
@@ -72,6 +72,7 @@ dev/                   Testwerkzeuge (nicht Teil der Plugins)
   test_wahlkampf.py      Wahlkampf-Karte ohne Rendern (Wahlart, Termin, Countdown, Karte nur an Wahlkampftagen)
   test_livestream.py     Livestream-Karte ohne Rendern (Stichwörter, läuft gerade, Adresse, QR zurückgelesen mit OpenCV, Fenstergrenzen)
   test_iss.py            ISS ohne Rendern (TLE-Cache, Überflüge, Schatten, Helligkeit, Schwellen, Texte; erfundene Bahn → prüft Stimmigkeit, nicht echte Zeiten)
+  test_abgelehnt.py      abgelehnte Einladungen ohne Rendern (eigene Adressen, nur eigene Absage, Serien, Nextcloud-Antwort, Testserver)
   test_ostereier.py      Ostereier ohne Rendern (Ostern/Karneval, Tage, 11:11, Vorrang bei der Katze, Regenbogen, Sternbild: Häufigkeit, Lage, pixelgleich ohne)
   katze_bogen.py         alle Katzen-Posen auf einem Bogen (dev/out/katze/posen.png, ohne Ostereier = Vorlage für docs/katze_posen.png; --ostereier → posen_ostereier.png)
   render_ausschaltbild.py  Ausschaltbild in allen Testauflösungen, Treiber-Simulation, 4×-Ausschnitte (--docs: Screenshots)
@@ -196,7 +197,7 @@ Parameter: `lat`, `lon`, `tz`, bei `/weather` zusätzlich `date` und `last_date`
 
 **Transitous** (nur Tagesdashboard, `anfahrt.py`): `https://api.transitous.org`, MOTIS-2-API, ehrenamtlich betrieben, frei für FOSS und nicht-kommerzielle Nutzung (Usage Policy auf transitous.org/api), kein Schlüssel. `/api/v1/geocode?text=…&place=lat,lon&numResults=1` → `[{lat, lon, name, …}]`. `/api/v6/plan` (Rückfall `/api/v5/plan` bei 404) mit `fromPlace`/`toPlace` = `lat,lon`, `time` (UTC, ISO), `arriveBy=true`. Rad: `directModes=BIKE`, `transitModes=` leer (bei HTTP 400 ohne), `maxDirectTime=5400` → Ergebnis in `direct[]`. ÖPNV: `directModes=WALK`, `searchWindow=3600` → `itineraries[]`; je Leg `mode` (BUS, TRAM, SUBWAY, SUBURBAN, REGIONAL_RAIL …), `routeShortName`, `startTime`/`scheduledStartTime`, `realTime`, `cancelled`, `from.name`. Zeiten in UTC mit `Z`. Daten in Deutschland: DELFI-Fahrplan (bundesweit, auch VRS/SWB) und DELFI-Echtzeit (GTFS-RT, Abdeckung je Verbund unterschiedlich; ob Bonner Busse Echtzeit haben, zeigt die Transitous-Karte). Spec: `openapi.yaml` im Repo motis-project/motis. **Aus der Claude-Umgebung nicht erreichbar** – nur gegen `dev/mock_transitous.py` getestet.
 
-**Nextcloud CalDAV:** Ablauf PROPFIND `current-user-principal` → `calendar-home-set` → Kalenderliste (Depth 1, mit `displayname` und `calendar-color`) → `REPORT calendar-query` mit Zeitraumfilter. Serientermine löst `recurring_ical_events` auf. VTODO-Listen werden übersprungen.
+**Nextcloud CalDAV:** Ablauf PROPFIND `current-user-principal` → `calendar-home-set` **und** `calendar-user-address-set` (eine Anfrage, `CalDavClient._principal`) → Kalenderliste (Depth 1, mit `displayname` und `calendar-color`) → `REPORT calendar-query` mit Zeitraumfilter. Serientermine löst `recurring_ical_events` auf. VTODO-Listen werden übersprungen. **Abgelehnte Einladungen (seit 1.26):** Nextcloud nennt unter `calendar-user-address-set` `mailto:<E-Mail des Kontos>` und die Principal-Adresse (RFC 6638) → `client.own_addresses`; `parse_events(…, own=client.own_addresses)` lässt ein Vorkommen weg, wenn alle eigenen `ATTENDEE`-Einträge `PARTSTAT=DECLINED` haben (`declined_by`; Absagen anderer Gäste zählen nicht; TENTATIVE/NEEDS-ACTION bleiben). Pro Vorkommen geprüft → in Serien fehlt nur die einzeln abgelehnte Ausnahme (`RECURRENCE-ID`). Adressen über `address_key` vergleichbar (mailto klein, Principal absolut). Ohne E-Mail im Nextcloud-Konto ist die Liste leer → nichts wird ausgeblendet (Log-Zeile `Kalender: Nextcloud nennt keine eigene Adresse`); ausgeblendete werden gezählt (`Kalender: N abgelehnte Termine ausgeblendet`). Kein Schalter, keine Einstellung. Radicale (Testserver) nennt nur die Principal-Adresse; `dev/caldav_server.with_mailto` ergänzt `mailto:leon@example.org` wie Nextcloud (dafür `Accept-Encoding: identity`, sonst ist die Antwort gzip). Die zwei abgelehnten Testeinladungen sind immer in den Testdaten (alle Bilder pixelgleich zu 1.25); Gegenproben mit `DEV_PROTO=einladung` (zugesagt mit fremder Absage, offen, Serie mit einem abgelehnten Tag). Die Livestream-Karte liest die gefilterte Terminliste: eine abgelehnte Ratssitzung zeigt keine Karte (`DEV_PROTO=rat-abgelehnt`, pixelgleich zum Bild ohne Sitzung). Test: `dev/test_abgelehnt.py`.
 
 Nicht gegen die echten Dienste getestet sind bisher: Bright Sky (die Entwicklungsumgebung war offline, auch `/radar`), franceinfo, sensor.community, die Luftdaten-API des UBA, der DWD-Pollenflug-Gefahrenindex und eine echte Nextcloud (getestet gegen Radicale unter `/remote.php/dav`). Abweichungen der echten Antworten von `dev/mock_brightsky.py`, `dev/mock_radar.py`, `dev/mock_luft.py` bzw. `dev/mock_pollen.py` zuerst dort nachziehen.
 
@@ -264,6 +265,8 @@ python dev/test_wahlkampf.py                                          # Wahlkamp
 DEV_PROTO=rat python dev/render.py tagesdashboard --time "2026-11-12 18:10" --simulate   # Livestream-Karte (Termin „Ratssitzung“ 17–22 Uhr); 16:59/22:00 = pixelgleich ohne
 python dev/test_livestream.py                                         # Livestream-Karte: Stichwörter, Zeitraum, Adresse, QR lesbar, Fenstergrenzen
 python dev/test_iss.py                                                # ISS: TLE-Cache, Überflüge, Schatten, Helligkeit, Schwellen, Texte
+python dev/test_abgelehnt.py                                          # abgelehnte Einladungen: Adressen, nur eigene Absage, Serien
+DEV_PROTO=einladung python dev/render.py nextcloud_kalender            # Gegenproben: zugesagt/offen sichtbar, Serie ohne den abgelehnten Tag
 python dev/test_ostereier.py                                          # Ostereier: Tage, 11:11, Vorrang, Regenbogen, Sternbild Katze
 python dev/render.py tagesdashboard --time "2026-11-11 11:20"         # Osterei Sessionsbeginn („Bonn Alaaf!“, Narrenkappe); 11:05 = noch nichts
 python dev/render.py tagesdashboard --time "2026-11-13 15:07"         # Osterei Freitag, der 13. (schwarze Katze); auch 2027-02-04 Weiberfastnacht,

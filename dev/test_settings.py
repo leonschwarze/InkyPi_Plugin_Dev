@@ -222,6 +222,22 @@ DB_CASES = {
                              "eclipseEnabled": "true", "planetEnabled": "true", "urlaubEnabled": "true",
                              "wahlEnabled": "true", "issEnabled": "true", "liveEnabled": "true",
                              "pegelEnabled": None, "piEnabled": None},
+    # 1.29: freie Abende (Schalter, Abendfenster), Adventskranz (cfgVersion 22)
+    "v21 freie Abende und Kranz noch unbekannt": {**DB_9, "cfgVersion": "21", "radarEnabled": "true",
+                                                  "airEnabled": "true", "trainRoute": "true", "catEnabled": "true",
+                                                  "catWeather": "true", "catNight": "true", "pollenEnabled": "true",
+                                                  "nightArt": "true", "meteorEnabled": "true", "eclipseEnabled": "true",
+                                                  "planetEnabled": "true", "urlaubEnabled": "true", "wahlEnabled": "true",
+                                                  "issEnabled": "true", "liveEnabled": "true", "pegelEnabled": "true",
+                                                  "piEnabled": "true"},
+    "v22 Kranz aus, Abend 19–0:30": {**DB_9, "cfgVersion": "22", "radarEnabled": "true", "airEnabled": "true",
+                                     "trainRoute": "true", "catEnabled": "true", "catWeather": "true",
+                                     "catNight": "true", "pollenEnabled": "true", "nightArt": "true",
+                                     "meteorEnabled": "true", "eclipseEnabled": "true", "planetEnabled": "true",
+                                     "urlaubEnabled": "true", "wahlEnabled": "true", "issEnabled": "true",
+                                     "liveEnabled": "true", "pegelEnabled": "true", "piEnabled": "true",
+                                     "freeEnabled": "true", "freeFrom": "19:00", "freeTo": "00:30",
+                                     "adventEnabled": None},
 }
 
 

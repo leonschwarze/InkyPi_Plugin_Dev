@@ -121,6 +121,9 @@ def main():
                     help="Tagesdashboard: Vergleich mit dem Vortag simulieren, z. B. -4 = Luft heute 4° kälter als gestern "
                          "(abends ab switchHour: morgen gegenüber heute). Angezeigt wird der Unterschied der gefühlten "
                          "Temperatur – mit Windchill unter 10 °C oft größer")
+    ap.add_argument("--iss", choices=["abend", "morgen", "keine", "echt"],
+                    help="Tagesdashboard: ISS-Überflug festlegen (abend/morgen/keine) oder mit erfundener Bahn "
+                         "wirklich rechnen (echt, dev/mock_ziel.py)")
     ap.add_argument("--display", default="inky", choices=["inky", "mock"])
     ap.add_argument("--font", default="eink", choices=["eink", "mono", "aa"])
     ap.add_argument("--inky-saturation", type=float, default=0.5)
@@ -178,6 +181,12 @@ def main():
         settings[key] = value
 
     module = __import__(f"plugins.{args.plugin}.{args.plugin}", fromlist=["x"])
+    if args.plugin == "tagesdashboard":
+        import mock_ziel  # Reiseziel-Wetter und Celestrak immer simulieren (nie echtes Netz)
+        mock_ziel.install(now)
+    if args.iss and args.iss != "echt" and args.plugin == "tagesdashboard":
+        import mock_iss
+        mock_iss.install(now, args.iss)
     cls = getattr(module, PLUGINS[args.plugin])
     cls.current_time = lambda self, tz: now.astimezone(tz)
     plugin = cls({"id": args.plugin})
@@ -209,6 +218,8 @@ def main():
         tag += f"_luft-{args.air}"
     if args.pollen != "gut":
         tag += f"_pollen-{args.pollen}"
+    if args.iss:
+        tag += f"_iss-{args.iss}"
     if args.seit:
         tag += f"_seit-{args.seit.replace(':', '').replace('gestern ', 'g')}"
     if args.display == "mock" or args.font != "eink":

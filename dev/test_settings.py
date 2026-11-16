@@ -173,6 +173,24 @@ DB_CASES = {
                                           "catWeather": "true", "catNight": "true", "pollenEnabled": "true",
                                           "nightArt": "true", "meteorEnabled": "true", "eclipseEnabled": "true",
                                           "planetEnabled": None},
+    # 1.23: Urlaubsbild, Wahlkampf-Karte, ISS im Nachtbild (cfgVersion 19)
+    "v18 Urlaub, Wahlkampf, ISS noch unbekannt": {**DB_9, "cfgVersion": "18", "radarEnabled": "true",
+                                                  "airEnabled": "true", "trainRoute": "true", "catEnabled": "true",
+                                                  "catWeather": "true", "catNight": "true", "pollenEnabled": "true",
+                                                  "nightArt": "true", "meteorEnabled": "true",
+                                                  "eclipseEnabled": "true", "planetEnabled": "true"},
+    "v19 alle drei aus": {**DB_9, "cfgVersion": "19", "radarEnabled": "true", "airEnabled": "true",
+                          "trainRoute": "true", "catEnabled": "true", "catWeather": "true", "catNight": "true",
+                          "pollenEnabled": "true", "nightArt": "true", "meteorEnabled": "true",
+                          "eclipseEnabled": "true", "planetEnabled": "true",
+                          "urlaubEnabled": None, "wahlEnabled": None, "issEnabled": None},
+    "v19 eigene Werte gemerkt": {**DB_9, "cfgVersion": "19", "radarEnabled": "true", "airEnabled": "true",
+                                 "trainRoute": "true", "catEnabled": "true", "catWeather": "true",
+                                 "catNight": "true", "pollenEnabled": "true", "nightArt": "true",
+                                 "meteorEnabled": "true", "eclipseEnabled": "true", "planetEnabled": "true",
+                                 "urlaubEnabled": "true", "urlaubWords": "Urlaub, Dienstreise", "urlaubMinDays": "3",
+                                 "wahlEnabled": "true", "wahlArt": "bundestag", "wahlTag": "2031-01-01",
+                                 "wahlWords": "Infostand, Plakat", "issEnabled": None},
 }
 
 

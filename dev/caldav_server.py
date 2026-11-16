@@ -133,3 +133,11 @@ def seed(home, base):
     put("familie", ev("Oma Geburtstag", f"{bday:%Y%m%d}", f"{bday + timedelta(days=1):%Y%m%d}",
                       allday=True, extra="\nRRULE:FREQ=YEARLY"))
     put("aufgaben", "BEGIN:VTODO\nUID:X\nDTSTAMP:20260101T000000Z\nSUMMARY:Steuer\nEND:VTODO")
+    # Urlaub und Wahlkampftermine (Umgebungsvariable DEV_PROTO=urlaub,wahl, damit die übrigen Bilder gleich bleiben)
+    import os
+    proto = os.environ.get("DEV_PROTO", "")
+    if "urlaub" in proto:
+        put("familie", ev("Urlaub in Lyon", d(-2), d(6), allday=True))
+    if "wahl" in proto:
+        put("arbeit", ev("Haustürwahlkampf Beuel", f"{d(0)}T150000", f"{d(0)}T180000", "Beuel-Mitte, Treffpunkt Rathaus"))
+        put("arbeit", ev("Infostand Marktplatz", f"{d(1)}T100000", f"{d(1)}T130000", "Bonner Markt"))

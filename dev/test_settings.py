@@ -238,6 +238,21 @@ DB_CASES = {
                                      "liveEnabled": "true", "pegelEnabled": "true", "piEnabled": "true",
                                      "freeEnabled": "true", "freeFrom": "19:00", "freeTo": "00:30",
                                      "adventEnabled": None},
+    # 1.30: Wetter am Zielort (cfgVersion 23)
+    "v22 Zielort noch unbekannt": {**DB_9, "cfgVersion": "22", "radarEnabled": "true", "airEnabled": "true",
+                                   "trainRoute": "true", "catEnabled": "true", "catWeather": "true",
+                                   "catNight": "true", "pollenEnabled": "true", "nightArt": "true",
+                                   "meteorEnabled": "true", "eclipseEnabled": "true", "planetEnabled": "true",
+                                   "urlaubEnabled": "true", "wahlEnabled": "true", "issEnabled": "true",
+                                   "liveEnabled": "true", "pegelEnabled": "true", "piEnabled": "true",
+                                   "freeEnabled": "true", "adventEnabled": "true"},
+    "v23 Zielort aus": {**DB_9, "cfgVersion": "23", "radarEnabled": "true", "airEnabled": "true",
+                        "trainRoute": "true", "catEnabled": "true", "catWeather": "true",
+                        "catNight": "true", "pollenEnabled": "true", "nightArt": "true",
+                        "meteorEnabled": "true", "eclipseEnabled": "true", "planetEnabled": "true",
+                        "urlaubEnabled": "true", "wahlEnabled": "true", "issEnabled": "true",
+                        "liveEnabled": "true", "pegelEnabled": "true", "piEnabled": "true",
+                        "freeEnabled": "true", "adventEnabled": "true", "zielEnabled": None},
 }
 
 

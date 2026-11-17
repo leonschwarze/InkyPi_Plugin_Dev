@@ -281,6 +281,9 @@ base = f"http://127.0.0.1:{srv.server_port}"
 dev_path = device_file(**PLAYLISTS)
 aus.LOG_FILE.write_text("")
 
+# Uhr festhalten: Die Testdaten haben 7–8 Uhr eine leere Playlist; mit der echten Uhrzeit schlug der
+# Ablauf deshalb genau in dieser Stunde fehl (aufgefallen am 17.11. um 7:22).
+aus.local_now = lambda tz=None: at("21:25")
 Fake.fails_left, Fake.posts = 1, []
 ok = aus.redraw_after_start(dev_path, base=base, retries=3, pause=0)
 check(ok and len(Fake.posts) == 2, "erster Versuch scheitert (Plugin ohne Netz), zweiter klappt")

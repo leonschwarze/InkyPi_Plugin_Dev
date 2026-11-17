@@ -192,6 +192,10 @@ def seed(home, base):
     if "rat" in proto:  # rat-abgelehnt: dieselbe Sitzung als von Leon abgelehnte Einladung → keine Karte (seit 1.26)
         declined = f"{org}\nATTENDEE;PARTSTAT=DECLINED:{MAILTO}" if "rat-abgelehnt" in proto else ""
         put("arbeit", ev("Ratssitzung", f"{d(0)}T170000", f"{d(0)}T220000", "Stadthaus, Ratssaal", extra=declined))
+    if "ziel" in proto:  # Wetter am Zielort (seit 1.30): heute Landtag Düsseldorf, morgen Eschweiler
+        put("arbeit", ev("Ausschuss Heimat und Kommunales", f"{d(0)}T130000", f"{d(0)}T163000",
+                         r"Landtag NRW\, Platz des Landtags 1\, 40221 Düsseldorf"))
+        put("arbeit", ev("Bürgersprechstunde", f"{d(1)}T190000", f"{d(1)}T210000", r"Rathaus\, Eschweiler"))
     if "wahl" in proto:
         put("arbeit", ev("Haustürwahlkampf Beuel", f"{d(0)}T150000", f"{d(0)}T180000", "Beuel-Mitte, Treffpunkt Rathaus"))
         put("arbeit", ev("Infostand Marktplatz", f"{d(1)}T100000", f"{d(1)}T130000", "Bonner Markt"))

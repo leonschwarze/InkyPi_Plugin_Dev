@@ -209,8 +209,8 @@ def main():
     # Mond mit Katze nie über Münster oder Langem Eugen (sitzt tiefer und würde dahinter verschwinden)
     import re
     bad = []
-    for width in (800, 480):
-        s_ = min(1.0, (width - 230) / 400)
+    for width in (800, 480, 756, 467, 516):  # seit 1.31 zeichnet das Dashboard die Szene in der Breite von nachtgrafik.band_width (756, 467, 516)
+        s_ = nachtgrafik.scale(width)
         for i in range(60):
             svg_ = nachtgrafik.svg(night + timedelta(days=i), wx, width=width, cat=katze.on_moon)
             mx = float(re.search(r'<path d="M([0-9.]+),', svg_).group(1))

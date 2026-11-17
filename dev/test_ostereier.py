@@ -149,8 +149,8 @@ check("Nebel: nicht", oe.felis_night(some, {"cloud": 10, "fog": True}), False)
 check("ohne Wetter: nicht", oe.felis_night(some, None), False)
 check("Bewölkung 0 zählt als klar", oe.felis_night(some, {"cloud": 0}), True)
 
-for W in (800, 480):
-    s = min(1.0, (W - 230) / 400)
+for W in (800, 480, 756, 467, 516):  # seit 1.31 zeichnet das Dashboard die Szene in der Breite von nachtgrafik.band_width (756, 467, 516)
+    s = nachtgrafik.scale(W)
     hills_x = W - 300 * s
     g = nachtgrafik.svg(at(2026, 11, 12, 0, 30), clear, width=W, felis=oe.felis_svg)
     xs = [float(x) for x in re.findall(r'<circle cx="([\d.]+)" cy="[\d.]+" r="[\d.]+" fill="#FFE500"/>', g)]
@@ -165,7 +165,7 @@ for W in (800, 480):
     check(f"{W}: rechts vom Ende der ISS-Bahn (0,88 W)", min(fx) - 3 > W * 0.88, True)
     check(f"{W}: ohne felis unverändert (kein Zufall verbraucht)",
           nachtgrafik.svg(at(2026, 11, 12, 0, 30), clear, width=W) ==
-          g.replace(oe.felis_svg(max(hills_x + 54, W - 38 * 0.85 - 20), 4, 0.85), ""), True)
+          g.replace(oe.felis_svg(nachtgrafik.felis_x(W), 4, nachtgrafik.FELIS_K), ""), True)
     g2 = nachtgrafik.svg(at(2026, 11, 12, 0, 30), clear, width=W, planet="Opposition", felis=oe.felis_svg)
     check(f"{W}: bei einer Opposition kein Sternbild", g2 == nachtgrafik.svg(at(2026, 11, 12, 0, 30), clear, width=W,
                                                                            planet="Opposition"), True)

@@ -105,6 +105,29 @@ check("Jedes Fenster: Beginn < Höhepunkt < Ende",
 check("Alle Fensterenden liegen in der Zukunft ab dem Recherchestand (November 2026)",
       all(p[2] > date(2026, 11, 13) for p in planeten.PLANETS))
 
+# ----------------------------------------------------------------------
+# Zeichnung (seit 1.31): Morgen-/Abendstern nie hinter dem Mond – in allen Szenenbreiten
+# (800/480 bis 1.29, 756/467/516 = nachtgrafik.band_width), mit und ohne Katze, 120 Nächte
+# ----------------------------------------------------------------------
+import re  # noqa: E402
+from datetime import datetime  # noqa: E402
+from zoneinfo import ZoneInfo  # noqa: E402
+import katze  # noqa: E402
+import nachtgrafik  # noqa: E402
+
+hidden = []
+start = datetime(2026, 11, 1, 23, 30, tzinfo=ZoneInfo("Europe/Berlin"))
+for W in (800, 480, 756, 467, 516):
+    for cat in (None, katze.on_moon):
+        for kind in ("Morgenstern", "Abendstern"):
+            for i in range(120):
+                g = nachtgrafik.svg(start + timedelta(days=i), {"cloud": 10}, width=W, cat=cat, planet=kind)
+                mx = float(re.search(r'<path d="M([0-9.]+),', g).group(1))
+                px = float(re.search(r'<circle cx="([\d.]+)" cy="[\d.]+" r="3.2"', g).group(1))
+                if abs(px - mx) <= (18 if cat else 14) + 7:  # Mondradius + Strahlenlänge
+                    hidden.append((W, bool(cat), kind, i))
+check(f"Morgen-/Abendstern nie hinter dem Mond (5 Breiten, mit/ohne Katze, 120 Nächte){hidden[:3]}", not hidden)
+
 print()
 if FAILED:
     print(f"{len(FAILED)} FEHLER: {', '.join(FAILED)}")

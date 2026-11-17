@@ -114,7 +114,7 @@ wx = {"cloud": 40, "wet": False, "snowy": False, "fog": False}
 plain = nachtgrafik.svg(NOW, wx)
 check("ohne Pegel wie bisher (kein Pegel-Element)", "<polyline" not in plain and "<text" not in plain)
 check("ohne Pegel: pegel=None ändert nichts", nachtgrafik.svg(NOW, wx, pegel=None) == plain)
-for width in (800, 480):
+for width in (800, 480, 756, 467, 516):  # seit 1.31 zeichnet das Dashboard die Szene in der Breite von nachtgrafik.band_width (756, 467, 516)
     for cm, trend in ((116, 0), (116, -1), (760, 1), (1010, 1)):
         art = nachtgrafik.svg(NOW, wx, width=width, pegel={"cm": cm, "label": pegel.label(cm), "trend": trend})
         y = nachtgrafik.pegel_y(cm)
@@ -126,6 +126,15 @@ for width in (800, 480):
         if y < nachtgrafik.WATER - 3:
             deck = art.rfind(f'y="{nachtgrafik.WATER - 6}" width=')
             check(f"{tag}: Brücke über der Welle gezeichnet", deck > art.find("<polyline"))
+
+# ---------------------------------------------------------------- randloses Band (seit 1.31)
+for dims, w in (((800, 480), 756), ((600, 448), 756), ((1600, 1200), 756), ((480, 800), 467), ((448, 600), 516)):
+    check(f"Bandbreite {dims[0]}×{dims[1]} → {w}", nachtgrafik.band_width(*dims) == w)
+    portrait = dims[1] > dims[0]
+    u = (min(1.45 * dims[0], 0.98 * dims[1]) if portrait else min(dims[0], 1.667 * dims[1])) / 100
+    band_px = dims[0] * nachtgrafik.H / w
+    check(f"  Bandhöhe {band_px:.1f} px ≈ {nachtgrafik.BAND_U[portrait]} × --u",
+          abs(band_px - nachtgrafik.BAND_U[portrait] * u) < 0.6)
 
 print()
 print("Alles in Ordnung." if not FAILED else f"{len(FAILED)} Fehler: {', '.join(FAILED)}")

@@ -1,4 +1,4 @@
-# Nextcloud Kalender für InkyPi – Version 1.26
+# Nextcloud Kalender für InkyPi – Version 1.33
 
 Termine per CalDAV aus Nextcloud, als Terminliste (mit Monatsübersicht) oder Woche in 7 Spalten.
 
@@ -7,6 +7,10 @@ Termine per CalDAV aus Nextcloud, als Terminliste (mit Monatsübersicht) oder Wo
 1. Den Ordner `nextcloud_kalender/` aus diesem Paket nach `InkyPi/src/plugins/nextcloud_kalender/` kopieren (vorhandenen Ordner ersetzen).
 2. `sudo systemctl restart inkypi.service` (eine Python-Datei hat sich geändert).
 3. Das App-Passwort gehört unter **API Keys** (Schlüssel `NEXTCLOUD_APP_PASSWORD`), nicht in die Plugin-Einstellungen.
+
+## Neu in 1.33: Kalenderzugriff abgesichert
+
+Verbesserungen bei der Sicherheit des Nextcloud-Zugangs. Das Plugin merkt sich, zu welcher Nextcloud dein App-Passwort gehört (`src/config/nextcloud_pin.json`; beim Umzug auf eine andere Adresse diese Datei löschen). Eine neue Adresse erst speichern, dann aktualisieren. Der Name des Schlüssels muss mit `NEXTCLOUD_` oder `NC_` beginnen. `http://` und abgeschaltete Zertifikatsprüfung gehen nur bei einer Nextcloud im Heimnetz. Einstellungen bleiben erhalten; Ordner ersetzen und `sudo systemctl restart inkypi.service`.
 
 ## Neu in 1.26: abgelehnte Einladungen ausgeblendet
 

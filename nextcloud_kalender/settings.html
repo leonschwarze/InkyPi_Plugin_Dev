@@ -73,9 +73,9 @@
         <label for="passwordKey">Name des Schlüssels für das App-Passwort</label>
         <input type="text" id="passwordKey" name="passwordKey" class="form-input" placeholder="NEXTCLOUD_APP_PASSWORD" />
     </div>
-    <div class="st-hint">Nur ändern, wenn mehrere Kalender-Instanzen verschiedene Nextcloud-Konten nutzen.</div>
+    <div class="st-hint">Nur ändern, wenn mehrere Kalender-Instanzen verschiedene Nextcloud-Konten nutzen. Muss mit NEXTCLOUD_ oder NC_ beginnen; das Passwort geht nur an die Nextcloud, mit der es zuerst funktioniert hat.</div>
     <label class="st-check"><input type="checkbox" class="nc-check" name="verifySSL" value="true" data-default="true"><span>SSL-Zertifikat prüfen</span></label>
-    <div class="st-hint">Nur bei selbst signierten Zertifikaten abschalten.</div>
+    <div class="st-hint">Abschalten wirkt nur bei einer Nextcloud im Heimnetz (selbst signiertes Zertifikat). Im Internet wird immer geprüft.</div>
     <label class="st-check"><input type="checkbox" class="nc-check" name="einkSnap" value="true" data-default="true"><span>Schärfer auf Inky-Displays (Farben einrasten statt rastern)</span></label>
 </details>
 
@@ -137,6 +137,13 @@
         const user = document.getElementById('username').value.trim();
         if (!url || !user) {
             showResponseModal('failure', 'Bitte Nextcloud-Adresse und Benutzernamen angeben.');
+            return false;
+        }
+        // Gleiche Regel wie KEY_RE im Plugin (seit 1.33): nur Schlüssel, die nach Nextcloud heißen
+        const key = document.getElementById('passwordKey').value.trim();
+        if (key && !/^(NEXTCLOUD|NC)_[A-Z0-9_]{1,40}$/.test(key)) {
+            document.getElementById('moreBox').open = true;
+            showResponseModal('failure', 'Der Name des Schlüssels muss mit NEXTCLOUD_ oder NC_ beginnen (Großbuchstaben).');
             return false;
         }
         return true;

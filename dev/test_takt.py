@@ -47,6 +47,8 @@ mock_radar.install(START, "trocken")
 mock_luft.install(START, "gut")
 mock_pollen.install(START, "gut")
 mock_pegel.install(START, "keine")
+import mock_nina  # noqa: E402  (Warnungen aus NINA seit 1.38: nie echtes Netz)
+mock_nina.install(START, "keine")
 mock_bahn.install(START, "ok")
 mock_vrr.install(START, "ruhig")
 import caldav_server  # noqa: E402

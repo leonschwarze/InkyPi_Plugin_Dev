@@ -10,6 +10,7 @@ Voraussetzung: pip install radicale
 """
 import socket
 import tempfile
+import os
 import threading
 import uuid
 from datetime import date, timedelta
@@ -68,6 +69,51 @@ def with_mailto(app):
     return wrapped
 
 
+def laufbuch(base, kind):
+    """Laufbuch wie vom iPhone-Kurzbefehl (seit 1.38): eine Zeile je Lauf, „Datum;km;Minuten“.
+
+    normal: diese Woche drei Läufe (17,5 km), die vier Wochen davor 12–15,5 km
+    viel:   diese Woche 26 km
+    leer:   diese Woche noch kein Lauf
+    Die Woche ist die, in der base liegt (Mo–So); Läufe nur bis base.
+    """
+    monday = base - timedelta(days=base.weekday())
+    weeks = {0: [(0, 5.2, 31), (2, 6.8, 41), (5, 5.5, 32)],
+             1: [(1, 5.0, 30), (3, 4.5, 28), (6, 6.0, 37)],
+             2: [(0, 4.8, 30), (4, 5.2, 31), (6, 5.0, 30)],
+             3: [(2, 5.0, 31), (5, 5.0, 31)],
+             4: [(1, 4.0, 26), (3, 4.5, 28), (6, 6.0, 38)]}
+    if kind == "viel":
+        weeks[0] = [(0, 6.2, 37), (1, 5.0, 30), (3, 8.3, 50), (5, 6.5, 39)]
+    if kind == "leer":
+        weeks[0] = []
+    lines = ["# Laufbuch – vom Kurzbefehl „Lauf eintragen“ geschrieben"]
+    for back in sorted(weeks, reverse=True):
+        for day, km, mins in weeks[back]:
+            d = monday - timedelta(days=7 * back) + timedelta(days=day)
+            if d <= base:
+                lines.append(f"{d.isoformat()};{str(km).replace('.', ',')};{mins}")
+    return "\n".join(lines) + "\n"
+
+
+def files_app(base):
+    """WebDAV-Dateien der Nextcloud-Attrappe: nur GET auf das Laufbuch (DEV_LAUF, seit 1.38)."""
+    from werkzeug.wrappers import Request, Response
+
+    def app(environ, start_response):
+        req = Request(environ)
+        kind = os.environ.get("DEV_LAUF", "keine")
+        auth = req.authorization
+        if not auth or auth.username != USER or auth.password != PASSWORD:
+            return Response("", 401)(environ, start_response)
+        if kind == "down":
+            return Response("", 503)(environ, start_response)
+        if req.method != "GET" or kind in ("keine", "fehlt") or not req.path.endswith("/laufen.txt"):
+            return Response("", 404)(environ, start_response)
+        return Response(laufbuch(base, kind), 200, content_type="text/plain; charset=utf-8")(environ, start_response)
+    return app
+
+
 def start(base: date):
     import radicale
     from radicale import config as rconfig
@@ -84,7 +130,8 @@ def start(base: date):
         "rights": {"type": "owner_only"},
     }, "test", privileged=True)
     app = DispatcherMiddleware(Response("Nextcloud-Attrappe", 200),
-                               {"/remote.php/dav": with_mailto(radicale.Application(conf))})
+                               {"/remote.php/dav": with_mailto(radicale.Application(conf)),
+                                "/remote.php/dav/files": files_app(base)})
     import logging
     logging.getLogger("werkzeug").setLevel(logging.WARNING)  # keine Zeile pro Anfrage
     logging.getLogger("radicale").setLevel(logging.WARNING)  # keine Meldungen zum Speicherort
@@ -187,6 +234,49 @@ def seed(home, base):
     # Urlaub und Wahlkampftermine (Umgebungsvariable DEV_PROTO=urlaub,wahl, damit die übrigen Bilder gleich bleiben)
     import os
     proto = os.environ.get("DEV_PROTO", "")
+    if "last" in proto:  # Wochenlast (seit 1.38): acht vergangene Wochen mit üblichen Sitzungen
+        monday = base - timedelta(days=base.weekday())
+        for back in range(1, 9):
+            m = monday - timedelta(days=7 * back)
+            def at(day, hh, mm=0):
+                return (m + timedelta(days=day)).strftime("%Y%m%d") + f"T{hh:02d}{mm:02d}00"
+            put("arbeit", ev("Fraktionssitzung", at(0, 17), at(0, 20), "Stadthaus"))
+            put("arbeit", ev("Jour fixe Team", at(1, 10), at(1, 11), "Videokonferenz"))
+            put("arbeit", ev("Landtag Büro", at(2, 9), at(2, 13 + back % 3), "Düsseldorf"))
+            if back % 2:
+                put("arbeit", ev("Schulausschuss", at(3, 17), at(3, 20), "Stadthaus"))
+            if back in (2, 5):
+                put("arbeit", ev("Infostand", at(5, 10), at(5, 13), "Bonner Markt"))
+        # kommende Woche (ab Montag nach base) bewusst voll: 19 h statt etwa 12 h
+        nxt = monday + timedelta(days=7)
+        def at2(day, hh, mm=0):
+            return (nxt + timedelta(days=day)).strftime("%Y%m%d") + f"T{hh:02d}{mm:02d}00"
+        put("arbeit", ev("Fraktionssitzung", at2(0, 17), at2(0, 20), "Stadthaus"))
+        put("arbeit", ev("Finanzausschuss", at2(2, 16), at2(2, 19, 30), "Stadthaus"))
+    if "monat" in proto:  # Monatsbild (seit 1.38): ein typischer Monat ab base
+        first = base.replace(day=1)
+        def at3(day, hh, mm=0):
+            return (first + timedelta(days=day - 1)).strftime("%Y%m%d") + f"T{hh:02d}{mm:02d}00"
+        def day3(day):
+            return (first + timedelta(days=day - 1)).strftime("%Y%m%d")
+        nxt_month = (first + timedelta(days=32)).replace(day=1)
+        for d0 in range(1, (nxt_month - first).days + 1):
+            wd = (first + timedelta(days=d0 - 1)).weekday()
+            if wd == 0 and d0 < 22:
+                put("arbeit", ev("Fraktionssitzung", at3(d0, 17), at3(d0, 20), "Stadthaus"))
+            if wd == 1 and d0 < 22:
+                put("arbeit", ev("Jour fixe Team", at3(d0, 10), at3(d0, 11), "Videokonferenz"))
+            if wd == 2 and d0 < 20:
+                put("arbeit", ev("Landtag Büro", at3(d0, 9), at3(d0, 15), "Düsseldorf"))
+        put("arbeit", ev("Schulausschuss", at3(3, 17), at3(3, 20), "Stadthaus"))
+        put("arbeit", ev("Ratssitzung", at3(10, 17), at3(10, 22), "Stadthaus, Ratssaal"))
+        put("arbeit", ev("Finanzausschuss", at3(15, 16), at3(15, 19), "Stadthaus"))
+        put("arbeit", ev("Weihnachtsfeier SPD Bonn", at3(12, 18), at3(12, 23), "Parteibüro"))
+        put("personal", ev("Weihnachtsmarkt mit Anna", at3(5, 16), at3(5, 19), "Münsterplatz"))
+        put("personal", ev("Friseur", at3(18, 9), at3(18, 10)))
+        put("familie", ev("Weihnachten bei den Eltern", day3(23), day3(28), allday=True))
+        put("personal", ev("Silvester bei Lisa", at3(31, 20), at3(31, 23, 59), "Beuel"))
+        put("familie", ev("Müllabfuhr: Gelbe Tonne", day3(17), day3(18), allday=True))
     if "urlaub" in proto:
         put("familie", ev("Urlaub in Lyon", d(-2), d(6), allday=True))
     if "rat" in proto:  # rat-abgelehnt: dieselbe Sitzung als von Leon abgelehnte Einladung → keine Karte (seit 1.26)

@@ -272,6 +272,23 @@ DB_CASES = {
                                   "liveEnabled": "true", "pegelEnabled": "true", "piEnabled": "true",
                                   "freeEnabled": "true", "adventEnabled": "true", "zielEnabled": "true",
                                   "runEnabled": None, "iceEnabled": None, "polarEnabled": None, "runMinutes": "45"},
+    # 1.38: Warnungen aus NINA, Wochenlast, Laufbuch, Monatsbild (cfgVersion 25)
+    "v24 NINA, Wochenlast, Laufbuch, Monatsbild noch unbekannt": {
+        **DB_9, "cfgVersion": "24", "radarEnabled": "true", "airEnabled": "true", "trainRoute": "true",
+        "catEnabled": "true", "catWeather": "true", "catNight": "true", "pollenEnabled": "true", "nightArt": "true",
+        "meteorEnabled": "true", "eclipseEnabled": "true", "planetEnabled": "true", "urlaubEnabled": "true",
+        "wahlEnabled": "true", "issEnabled": "true", "liveEnabled": "true", "pegelEnabled": "true",
+        "piEnabled": "true", "freeEnabled": "true", "adventEnabled": "true", "zielEnabled": "true",
+        "runEnabled": "true", "iceEnabled": "true", "polarEnabled": "true", "runMinutes": "60"},
+    "v25 alle vier aus, eigene Werte": {
+        **DB_9, "cfgVersion": "25", "radarEnabled": "true", "airEnabled": "true", "trainRoute": "true",
+        "catEnabled": "true", "catWeather": "true", "catNight": "true", "pollenEnabled": "true", "nightArt": "true",
+        "meteorEnabled": "true", "eclipseEnabled": "true", "planetEnabled": "true", "urlaubEnabled": "true",
+        "wahlEnabled": "true", "issEnabled": "true", "liveEnabled": "true", "pegelEnabled": "true",
+        "piEnabled": "true", "freeEnabled": "true", "adventEnabled": "true", "zielEnabled": "true",
+        "runEnabled": "true", "iceEnabled": "true", "polarEnabled": "true", "runMinutes": "60",
+        "ninaEnabled": None, "ninaArs": "05382", "loadEnabled": None, "runLogEnabled": None,
+        "runFile": "Sport/laufen.txt", "monthEnabled": None, "monthFrom": "07:00", "monthTo": "09:30"},
 }
 
 

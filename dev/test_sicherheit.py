@@ -50,6 +50,8 @@ mock_radar.install(NOW, "trocken")
 mock_luft.install(NOW, "gut")
 mock_pollen.install(NOW, "gut")
 mock_pegel.install(NOW, "keine")
+import mock_nina  # noqa: E402  (Warnungen aus NINA seit 1.38: nie echtes Netz)
+mock_nina.install(NOW, "keine")
 import mock_ziel  # noqa: E402  (erst jetzt: merkt sich beim Import den vorigen get)
 mock_ziel.install(NOW)
 import caldav_server  # noqa: E402

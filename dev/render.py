@@ -128,6 +128,10 @@ def main():
                     help="Tagesdashboard: Kp-Vorhersage der NOAA fürs Polarlicht simulieren (dev/mock_polar.py); keine = wie bisher")
     ap.add_argument("--pegel", default="keine", choices=["keine", "niedrig", "faellt", "normal", "hoch", "sehrhoch", "alt", "down"],
                     help="Tagesdashboard: Pegel Bonn im Nachtbild simulieren (dev/mock_pegel.py); keine = Rhein wie bisher")
+    ap.add_argument("--nina", default="keine", choices=["keine", "bombe", "fern", "trinkwasser", "zwei", "dwd", "entwarnung", "down"],
+                    help="Tagesdashboard: Warnungen aus NINA simulieren (dev/mock_nina.py); keine = wie bisher")
+    ap.add_argument("--lauf", default="keine", choices=["keine", "normal", "viel", "leer", "fehlt", "down"],
+                    help="Tagesdashboard: Laufbuch in der Nextcloud simulieren (dev/caldav_server.py); keine = Datei fehlt")
     ap.add_argument("--pi", default="ok", choices=["ok", "ausfall", "warn", "leer"],
                     help="Tagesdashboard: Zustand des Pi in der Wochenvorschau simulieren (dev/mock_pi.py)")
     ap.add_argument("--display", default="inky", choices=["inky", "mock"])
@@ -175,6 +179,9 @@ def main():
     mock_pegel.install(now, args.pegel)
     import mock_polar  # Polarlicht immer simulieren (Standard: keine Daten, dann bleibt das Nachtbild wie bisher)
     mock_polar.install(now, args.polar)
+    import mock_nina  # Warnungen immer simulieren (Standard: keine, dann bleibt das Bild wie bisher)
+    mock_nina.install(now, args.nina)
+    os.environ["DEV_LAUF"] = args.lauf  # Laufbuch im CalDAV-Testserver (WebDAV-Datei)
 
     settings = dict(BASE_SETTINGS)
     env = {}
@@ -239,6 +246,10 @@ def main():
         tag += f"_polar-{args.polar}"
     if args.pi != "ok":
         tag += f"_pi-{args.pi}"
+    if args.nina != "keine":
+        tag += f"_nina-{args.nina}"
+    if args.lauf != "keine":
+        tag += f"_lauf-{args.lauf}"
     if args.seit:
         tag += f"_seit-{args.seit.replace(':', '').replace('gestern ', 'g')}"
     if args.display == "mock" or args.font != "eink":

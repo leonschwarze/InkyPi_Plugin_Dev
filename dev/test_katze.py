@@ -110,12 +110,38 @@ def main():
     check(other != names[36:44], "anderer Tag → andere Reihenfolge")
     rainy = [hour(now.replace(minute=0), precipitation=1)]
     c = katze.choose(now, rainy)
-    check(c["main"]["name"] == "schirm" and c["spots"][0] == "kopf", "Schirm braucht Höhe → zuerst die Kopfzeile")
+    check(c["main"]["name"] in katze.WEATHER_POSES["regen"] and c["reason"] == "regen", "Regen → eine Regen-Pose")
+    tall = next(t for t in (now + timedelta(minutes=15 * i) for i in range(6))
+                if not katze.is_flat(katze.choose(t, [hour(t.replace(minute=0), precipitation=1)])["main"]["name"]))
+    c = katze.choose(tall, [hour(tall.replace(minute=0), precipitation=1)])
+    check(c["spots"][0] == "kopf", "hohe Regen-Pose braucht Höhe → zuerst die Kopfzeile")
     check(katze.choose(now, rainy, weather=False)["main"]["name"] in katze.EVERYDAY,
           "„passt sich dem Wetter an“ aus → nur Alltags-Posen")
     stormy = [hour(now.replace(minute=0), wind_gust_speed=70)]
     c = katze.choose(now, stormy)
-    check(c["main"]["name"] == c["flat"]["name"] == "sturm", "Sturm-Pose ist flach und gilt für alle Plätze")
+    check(c["main"]["name"] in katze.WEATHER_POSES["sturm"] and c["flat"]["name"] == "sturm",
+          "Sturm: Variante, flach weiter die geduckte Sturm-Katze")
+
+    print("Wetter-Varianten (seit 1.34)")
+    for why, kw in (("regen", {"precipitation": 1}), ("sturm", {"wind_gust_speed": 70}),
+                    ("schnee", {"icon": "snow", "precipitation": 1}), ("frost", {"temperature": -4}),
+                    ("sonne", {"sunshine": 55, "temperature": 22}),
+                    ("gewitter", {"icon": "thunderstorm", "precipitation": 3}), ("nebel", {"icon": "fog"})):
+        ts = [day + timedelta(minutes=15 * i) for i in range(24)]
+        got = [katze.choose(t, [hour(t.replace(minute=0), **kw)], feels_like=feels_like) for t in ts]
+        names = [c["main"]["name"] for c in got]
+        check(all(c["reason"] == why for c in got), f"{why}: reason stimmt")
+        check(set(names) == set(katze.WEATHER_POSES[why]), f"{why}: alle drei Varianten kommen vor ({sorted(set(names))})")
+        if len(katze.WEATHER_POSES[why]) > 1:
+            check(all(a != b for a, b in zip(names, names[1:])), f"{why}: nie zweimal dieselbe hintereinander")
+        flats = {c["flat"]["name"] for c in got}
+        same = [p for p in katze.WEATHER_POSES[why] if katze.is_flat(p)]
+        check(flats <= set(same) if same else all(f in katze.EVERYDAY for f in flats),
+              f"{why}: flache Ersatzpose {sorted(flats)}")
+    seq = lambda d: [katze.weather_pose("regen", d, s) for s in range(3)]  # noqa: E731
+    check(len({tuple(seq(day.date() + timedelta(days=i))) for i in range(10)}) > 1, "Reihenfolge wechselt von Tag zu Tag")
+    check(not {p for v in katze.WEATHER_POSES.values() for p in v} & set(katze.EVERYDAY),
+          "Wetter-Posen kommen nie im Alltag")
 
     print("Anlässe (seit 1.20)")
     morning = datetime(2026, 11, 11, 6, 0, tzinfo=TZ)
@@ -131,9 +157,9 @@ def main():
     c = katze.choose(occ, rain(occ), occasions=["geburtstag", "nachrichten"], feels_like=feels_like)
     check(c["main"]["name"] == "partyhut", "Geburtstag geht dem Wetter vor (Anlass-Takt, Regen)")
     c = katze.choose(plain, rain(plain), occasions=["geburtstag"], feels_like=feels_like)
-    check(c["main"]["name"] == "schirm", "im anderen Takt gilt am Geburtstag das Wetter")
+    check(c["reason"] == "regen", "im anderen Takt gilt am Geburtstag das Wetter")
     c = katze.choose(occ, rain(occ), occasions=["nachrichten", "zug"], feels_like=feels_like)
-    check(c["main"]["name"] == "schirm", "Wetter geht Nachrichten und Zug vor")
+    check(c["reason"] == "regen", "Wetter geht Nachrichten und Zug vor")
     c = katze.choose(occ, occasions=["geburtstag"])
     check(c["main"]["name"] == "partyhut" and c["spots"][0] == "kopf", "Partyhut braucht Höhe → zuerst die Kopfzeile")
     both = {katze.choose(t, occasions=["nachrichten", "zug"])["main"]["name"]
@@ -147,6 +173,37 @@ def main():
     check(not set(katze.OCCASION_POSE.values()) & set(katze.EVERYDAY), "Anlass-Posen kommen nie im Alltag")
     starts = {katze.occasion_slot(datetime(2026, 11, d, 6, 0, tzinfo=TZ)) for d in range(1, 15)}
     check(starts == {True, False}, "welcher Takt beginnt, wechselt von Tag zu Tag")
+
+    print("Nebel, Gewitter, neue Anlässe (seit 1.35)")
+    t0 = now.replace(minute=0)
+    check(katze.weather_reason([hour(t0, icon="thunderstorm", wind_gust_speed=70)], now) == "sturm", "Sturm vor Gewitter")
+    check(katze.weather_reason([hour(t0, icon="thunderstorm", precipitation=5)], now) == "gewitter",
+          "Gewitter vor Regen (vorher Regen)")
+    check(katze.weather_reason([hour(t0, icon="fog", precipitation=1)], now) == "regen", "Regen vor Nebel")
+    check(katze.weather_reason([hour(t0, icon="fog", temperature=-5)], now) == "nebel", "Nebel vor Frost")
+    check(katze.weather_reason([hour(t0, condition="fog")], now) == "nebel", "Nebel auch über condition")
+    check(katze.is_flat("gewitter") and katze.is_flat("hängematte"), "Gewitter und Hängematte sind flach")
+    for occ_name, pose_name in (("radar", "fernglas"), ("rad", "helm"), ("oepnv", "haltestelle"), ("pollen", "niest"),
+                                ("wahlkampf", "plakat"), ("zielort", "karte"), ("abend", "zipfelmütze")):
+        got = [katze.choose(day + timedelta(minutes=15 * i), occasions=[occ_name])["main"]["name"] for i in range(8)]
+        check(got.count(pose_name) == 4, f"{occ_name} → {pose_name} jedes zweite Mal ({got.count(pose_name)} von 8)")
+    sat = datetime(2026, 11, 14, 9, 0, tzinfo=TZ)
+    got = [katze.choose(sat + timedelta(minutes=15 * i), occasions=["wochenende"])["main"]["name"] for i in range(16)]
+    check(got.count("hängematte") == 4, f"Wochenende: Hängematte nur jedes vierte Mal ({got.count('hängematte')} von 16)")
+    got = [katze.choose(sat + timedelta(minutes=15 * i), occasions=["wochenende", "radar"])["main"]["name"]
+           for i in range(16)]
+    check(got.count("fernglas") >= 4 and got.count("hängematte") >= 2, "Wochenende wechselt sich mit anderen Anlässen ab")
+    check(not set(katze.OCCASION_POSE.values()) & set(katze.EVERYDAY), "Anlass-Posen nie im Alltag")
+    check(len(katze.EVERYDAY) == 24, "24 Alltags-Posen")
+
+    print("Advent (seit 1.34)")
+    adv = datetime(2026, 12, 3, 9, 0, tzinfo=TZ)
+    picks = [katze.choose(adv + timedelta(minutes=15 * i), occasions=["advent"]) for i in range(8)]
+    check(sum(c["main"]["name"] == "lichterkette" for c in picks) == 4, "Lichterkette jedes zweite Mal")
+    o = next(adv + timedelta(minutes=15 * i) for i in range(4) if katze.occasion_slot(adv + timedelta(minutes=15 * i)))
+    check(katze.choose(o, rain(o), occasions=["advent"], feels_like=feels_like)["reason"] == "regen",
+          "Wetter geht der Lichterkette vor")
+    check(katze.choose(o, occasions=["advent", "geburtstag"])["main"]["name"] == "partyhut", "Geburtstag vor Advent")
 
     print("Ratssitzung (seit 1.27)")
     session = datetime(2026, 11, 12, 17, 0, tzinfo=TZ)
@@ -163,7 +220,7 @@ def main():
     check(c["main"]["name"] == "rednerpult", "Ratssitzung geht dem Wetter vor (Anlass-Takt, Regen)")
     check(c["spots"][0] == "kopf", "Rednerpult braucht Höhe → zuerst die Kopfzeile")
     c = katze.choose(plain, rain(plain), occasions=["rat"], feels_like=feels_like)
-    check(c["main"]["name"] == "schirm", "im anderen Takt gilt das Wetter")
+    check(c["reason"] == "regen", "im anderen Takt gilt das Wetter")
     c = katze.choose(occ, occasions=["rat"], egg="narr")
     check(c["main"]["name"] == "rednerpult", "Ratssitzung geht dem Osterei vor (Anlass-Takt)")
     check(katze.choose(plain, occasions=["rat"], egg="narr")["main"]["name"] == "narr", "… im anderen Takt das Osterei")

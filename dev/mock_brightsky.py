@@ -65,6 +65,10 @@ def hourly(now, scenario="herbst", shift=None):
             cloud, sunshine = 40, (30 if is_day else 0)
         if scenario == "nebel" and day == 1 and hour < 9:
             icon, cloud, precip, prob = "fog", 100, 0, 10
+        if scenario == "gewitter" and day == 0 and 12 <= hour <= 18:  # seit 1.35: Katze bei Gewitter
+            icon, precip, prob, cloud = "thunderstorm", 4.0, 80, 95
+        if scenario == "nebeltag" and day == 0 and hour < 12:  # seit 1.35: Katze bei Nebel (tagsüber)
+            icon, cloud, precip, prob = "fog", 100, 0, 10
         if scenario == "bedeckt" and day == 1:
             icon, cloud = "cloudy", 95
         if scenario == "regenbogen" and day == 0 and 14 <= hour <= 16:  # Schauer bei Sonne (Ostereier: Regenbogen)

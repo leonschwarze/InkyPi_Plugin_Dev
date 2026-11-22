@@ -97,7 +97,7 @@ def main():
     ap.add_argument("plugin", choices=PLUGINS)
     ap.add_argument("--inkypi", default=os.environ.get("INKYPI_DIR", str(REPO.parent / "InkyPi")))
     ap.add_argument("--time", default="2026-11-10 15:07", help='feste Uhrzeit, z. B. "2026-11-10 21:12"')
-    ap.add_argument("--scenario", default="herbst", choices=["herbst", "winter", "sommer", "ruhig", "klar", "trocken", "nebel", "bedeckt", "regenbogen"])
+    ap.add_argument("--scenario", default="herbst", choices=["herbst", "winter", "sommer", "ruhig", "klar", "trocken", "nebel", "bedeckt", "regenbogen", "gewitter", "nebeltag"])
     ap.add_argument("--sizes", default="800x480,480x800v,1600x1200")
     ap.add_argument("--set", action="append", default=[], metavar="KEY=VALUE", help="Plugin-Einstellung setzen")
     ap.add_argument("--fail", choices=["wetter", "kalender", "uv"], help="Ausfall einer Datenquelle simulieren")

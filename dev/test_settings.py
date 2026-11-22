@@ -253,6 +253,25 @@ DB_CASES = {
                         "urlaubEnabled": "true", "wahlEnabled": "true", "issEnabled": "true",
                         "liveEnabled": "true", "pegelEnabled": "true", "piEnabled": "true",
                         "freeEnabled": "true", "adventEnabled": "true", "zielEnabled": None},
+    # 1.37: Lauf-Fenster, Glätte-Hinweis, Polarlicht (cfgVersion 24)
+    "v23 Laufen, Glätte, Polarlicht noch unbekannt": {**DB_9, "cfgVersion": "23", "radarEnabled": "true",
+                                                      "airEnabled": "true", "trainRoute": "true", "catEnabled": "true",
+                                                      "catWeather": "true", "catNight": "true", "pollenEnabled": "true",
+                                                      "nightArt": "true", "meteorEnabled": "true",
+                                                      "eclipseEnabled": "true", "planetEnabled": "true",
+                                                      "urlaubEnabled": "true", "wahlEnabled": "true",
+                                                      "issEnabled": "true", "liveEnabled": "true",
+                                                      "pegelEnabled": "true", "piEnabled": "true",
+                                                      "freeEnabled": "true", "adventEnabled": "true",
+                                                      "zielEnabled": "true"},
+    "v24 alle drei aus, 45 min": {**DB_9, "cfgVersion": "24", "radarEnabled": "true", "airEnabled": "true",
+                                  "trainRoute": "true", "catEnabled": "true", "catWeather": "true",
+                                  "catNight": "true", "pollenEnabled": "true", "nightArt": "true",
+                                  "meteorEnabled": "true", "eclipseEnabled": "true", "planetEnabled": "true",
+                                  "urlaubEnabled": "true", "wahlEnabled": "true", "issEnabled": "true",
+                                  "liveEnabled": "true", "pegelEnabled": "true", "piEnabled": "true",
+                                  "freeEnabled": "true", "adventEnabled": "true", "zielEnabled": "true",
+                                  "runEnabled": None, "iceEnabled": None, "polarEnabled": None, "runMinutes": "45"},
 }
 
 

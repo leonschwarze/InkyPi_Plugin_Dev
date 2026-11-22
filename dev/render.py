@@ -97,7 +97,7 @@ def main():
     ap.add_argument("plugin", choices=PLUGINS)
     ap.add_argument("--inkypi", default=os.environ.get("INKYPI_DIR", str(REPO.parent / "InkyPi")))
     ap.add_argument("--time", default="2026-11-10 15:07", help='feste Uhrzeit, z. B. "2026-11-10 21:12"')
-    ap.add_argument("--scenario", default="herbst", choices=["herbst", "winter", "sommer", "ruhig", "klar", "trocken", "nebel", "bedeckt", "regenbogen", "gewitter", "nebeltag"])
+    ap.add_argument("--scenario", default="herbst", choices=["herbst", "winter", "sommer", "ruhig", "klar", "trocken", "nebel", "bedeckt", "regenbogen", "gewitter", "nebeltag", "reif"])
     ap.add_argument("--sizes", default="800x480,480x800v,1600x1200")
     ap.add_argument("--set", action="append", default=[], metavar="KEY=VALUE", help="Plugin-Einstellung setzen")
     ap.add_argument("--fail", choices=["wetter", "kalender", "uv"], help="Ausfall einer Datenquelle simulieren")
@@ -124,6 +124,8 @@ def main():
     ap.add_argument("--iss", choices=["abend", "morgen", "keine", "echt"],
                     help="Tagesdashboard: ISS-Überflug festlegen (abend/morgen/keine) oder mit erfundener Bahn "
                          "wirklich rechnen (echt, dev/mock_ziel.py)")
+    ap.add_argument("--polar", default="keine", choices=["keine", "ruhig", "kp6", "kp7", "kp8", "alt", "down"],
+                    help="Tagesdashboard: Kp-Vorhersage der NOAA fürs Polarlicht simulieren (dev/mock_polar.py); keine = wie bisher")
     ap.add_argument("--pegel", default="keine", choices=["keine", "niedrig", "faellt", "normal", "hoch", "sehrhoch", "alt", "down"],
                     help="Tagesdashboard: Pegel Bonn im Nachtbild simulieren (dev/mock_pegel.py); keine = Rhein wie bisher")
     ap.add_argument("--pi", default="ok", choices=["ok", "ausfall", "warn", "leer"],
@@ -171,6 +173,8 @@ def main():
     mock_pollen.install(now, args.pollen)
     import mock_pegel  # Pegel immer simulieren (Standard: keine Daten, dann bleibt der Rhein wie bisher)
     mock_pegel.install(now, args.pegel)
+    import mock_polar  # Polarlicht immer simulieren (Standard: keine Daten, dann bleibt das Nachtbild wie bisher)
+    mock_polar.install(now, args.polar)
 
     settings = dict(BASE_SETTINGS)
     env = {}
@@ -231,6 +235,8 @@ def main():
         tag += f"_iss-{args.iss}"
     if args.pegel != "keine":
         tag += f"_pegel-{args.pegel}"
+    if args.polar != "keine":
+        tag += f"_polar-{args.polar}"
     if args.pi != "ok":
         tag += f"_pi-{args.pi}"
     if args.seit:

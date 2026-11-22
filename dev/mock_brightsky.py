@@ -14,6 +14,8 @@ Szenarien: "herbst" (Standard), "winter" (Schnee statt Regen, Frost),
 "klar" (abends trocken, klare feuchte Nacht mit Tau und Bewölkung < 30 % – auch fürs Nachtbild
 "sternklar"), "trocken" (abends trocken, trockene windige Nacht).
 Die beiden letzten sind für die Wäsche-Karte; sie haben keine Warnungen.
+"reif" (seit 1.37): klare, feuchte Frostnacht bis heute Abend trocken – morgens Reif (Glätte-Hinweis), mittags
+Lauf-Fenster.
 "nebel" und "bedeckt" (wie herbst, aber die kommende Nacht neblig bzw. bedeckt) für das Nachtbild.
 """
 import math
@@ -39,6 +41,8 @@ def hourly(now, scenario="herbst", shift=None):
             base, amp = -3 + day * 0.4, 3
         elif scenario == "sommer":
             base, amp = 24 + (day % 3), 7
+        elif scenario == "reif" and day <= 1:  # seit 1.37: klare Frostnacht, morgens Reif (Glätte-Hinweis)
+            base, amp = 0.5, 4
         else:
             base, amp = 8 - day * 0.3, 3.5
         temp = base + amp * math.sin((hour - 9) / 24 * 2 * math.pi) + shift.get(day, 0)
@@ -73,6 +77,11 @@ def hourly(now, scenario="herbst", shift=None):
             icon, cloud = "cloudy", 95
         if scenario == "regenbogen" and day == 0 and 14 <= hour <= 16:  # Schauer bei Sonne (Ostereier: Regenbogen)
             icon, cloud, precip, prob, sunshine = "rain", 60, 0.4, 60, 25
+        if scenario == "reif" and day <= 0:  # klar und trocken bis heute Abend (danach wie herbst)
+            precip, prob = 0, 5
+            cloud = 15 if not (day == 0 and hour >= 17) else 60
+            icon = ("clear-day" if is_day else "clear-night") if cloud < 30 else icon
+            sunshine = 50 if is_day else 0
         if scenario == "winter" and icon == "rain":
             icon = "snow"
         if is_day and cloud < 80 and day != 1:
@@ -83,6 +92,8 @@ def hourly(now, scenario="herbst", shift=None):
             rh, spread, wind = 96, 0.8, 6
         elif scenario == "trocken":
             rh, spread, wind = 62, 8, 14
+        elif scenario == "reif":
+            rh, spread, wind = (95, 0.5, 4) if night else (70, 4, 8)
         if scenario == "klar" and day in (0, 1) and (hour >= 17 or hour < 7):
             cloud = 20  # heute Nacht sternklar (< 30 %), für das Nachtbild (nachtgrafik.describe);
                         # day 0 und 1, weil die Nacht über Mitternacht in den nächsten Kalendertag fällt
@@ -111,10 +122,11 @@ def hourly(now, scenario="herbst", shift=None):
 
 
 def current(now, scenario="herbst"):
-    temp = {"winter": -1.8, "sommer": 31.4}.get(scenario, 10.6)
+    temp = {"winter": -1.8, "sommer": 31.4, "reif": -2.6}.get(scenario, 10.6)
     return {"weather": {
-        "source_id": 1234, "timestamp": now.isoformat(), "cloud_cover": 75, "condition": "dry",
-        "dew_point": 6.9, "icon": "snow" if scenario == "winter" else "partly-cloudy-day",
+        "source_id": 1234, "timestamp": now.isoformat(), "cloud_cover": 15 if scenario == "reif" else 75,
+        "condition": "dry", "dew_point": 6.9,
+        "icon": {"winter": "snow", "reif": "clear-day"}.get(scenario, "partly-cloudy-day"),
         "precipitation_60": 0.6 if scenario == "winter" else 0.0, "pressure_msl": 1013.4,
         "relative_humidity": 45 if scenario == "sommer" else 78, "temperature": temp, "visibility": 24000,
         "wind_direction_10": 230, "wind_speed_10": 17.3, "wind_gust_speed_10": 38.9, "sunshine_60": 12,
@@ -124,7 +136,7 @@ def current(now, scenario="herbst"):
 def alerts(now, scenario="herbst"):
     loc = {"warn_cell_id": 105314000, "name": "Stadt Bonn", "name_short": "Bonn",
            "district": "Bonn", "state": "Nordrhein-Westfalen", "state_short": "NW"}
-    if scenario in ("ruhig", "klar", "trocken", "nebel", "bedeckt"):
+    if scenario in ("ruhig", "klar", "trocken", "nebel", "bedeckt", "reif"):
         return {"alerts": [], "location": loc}
     sev = "severe" if scenario == "sommer" else "moderate"
     ev = {"sommer": "SCHWERES GEWITTER mit ORKANBÖEN", "winter": "GLÄTTE"}.get(scenario, "STURMBÖEN")

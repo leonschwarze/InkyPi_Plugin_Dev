@@ -132,6 +132,9 @@ def main():
                     help="Tagesdashboard: Warnungen aus NINA simulieren (dev/mock_nina.py); keine = wie bisher")
     ap.add_argument("--lauf", default="keine", choices=["keine", "normal", "viel", "leer", "fehlt", "down"],
                     help="Tagesdashboard: Laufbuch in der Nextcloud simulieren (dev/caldav_server.py); keine = Datei fehlt")
+    ap.add_argument("--xkcd", default="normal", choices=["normal", "breit", "hoch", "farbig", "lang", "keiner", "nur1x", "down"],
+                    help="Tagesdashboard: Sonntagscomic simulieren (dev/mock_xkcd.py; erscheint nur sonntags ohne "
+                         "weitere Termine, z. B. DEV_PROTO=frei --time \"2026-11-15 14:20\")")
     ap.add_argument("--pi", default="ok", choices=["ok", "ausfall", "warn", "viele", "leer"],
                     help="Tagesdashboard: Zustand des Pi in der Wochenvorschau simulieren (dev/mock_pi.py)")
     ap.add_argument("--display", default="inky", choices=["inky", "mock"])
@@ -183,6 +186,8 @@ def main():
     mock_polar.install(now, args.polar)
     import mock_nina  # Warnungen immer simulieren (Standard: keine, dann bleibt das Bild wie bisher)
     mock_nina.install(now, args.nina)
+    import mock_xkcd  # Comics immer simulieren (erscheinen nur sonntags ohne Termine; sonst bleibt alles wie bisher)
+    mock_xkcd.install(now, args.xkcd)
     os.environ["DEV_LAUF"] = args.lauf  # Laufbuch im CalDAV-Testserver (WebDAV-Datei)
 
     settings = dict(BASE_SETTINGS)
@@ -200,6 +205,8 @@ def main():
         settings[key] = value
 
     module = __import__(f"plugins.{args.plugin}.{args.plugin}", fromlist=["x"])
+    if args.plugin == "tagesdashboard":  # erfundene Comics nicht Randall Munroe zuschreiben (Screenshots in docs/)
+        __import__("plugins.tagesdashboard.xkcd", fromlist=["x"]).CREDIT = "Beispiel"
     if args.plugin == "tagesdashboard":
         import mock_ziel  # Reiseziel-Wetter und Celestrak immer simulieren (nie echtes Netz)
         mock_ziel.install(now)
@@ -252,6 +259,8 @@ def main():
         tag += f"_nina-{args.nina}"
     if args.lauf != "keine":
         tag += f"_lauf-{args.lauf}"
+    if args.xkcd != "normal":
+        tag += f"_xkcd-{args.xkcd}"
     if args.seit:
         tag += f"_seit-{args.seit.replace(':', '').replace('gestern ', 'g')}"
     if args.display == "mock" or args.font != "eink":

@@ -178,9 +178,14 @@ def seed(home, base):
     mkcal("familie", "Familie", "#2E9E3F")
     mkcal("aufgaben", "Aufgaben", "#999999", comps=("VTODO",))  # muss ignoriert werden
 
-    put("personal", ev("Frühstück mit Anna", f"{d(0)}T080000", f"{d(0)}T090000", "Café Müller"))
-    put("personal", ev("Zahnarzt Dr. Weber", f"{d(0)}T163000", f"{d(0)}T171500", "Poppelsdorfer Allee 12"))
-    put("arbeit", ev("Ausschusssitzung", f"{d(0)}T180000", f"{d(0)}T203000", "Stadthaus"))
+    import os
+    # DEV_PROTO=frei (seit 1.40, Sonntagscomic): heute nur das Frühstück am Morgen, danach frei
+    if "frei" not in os.environ.get("DEV_PROTO", ""):
+        put("personal", ev("Frühstück mit Anna", f"{d(0)}T080000", f"{d(0)}T090000", "Café Müller"))
+        put("personal", ev("Zahnarzt Dr. Weber", f"{d(0)}T163000", f"{d(0)}T171500", "Poppelsdorfer Allee 12"))
+        put("arbeit", ev("Ausschusssitzung", f"{d(0)}T180000", f"{d(0)}T203000", "Stadthaus"))
+    else:
+        put("personal", ev("Frühstück mit Anna", f"{d(0)}T100000", f"{d(0)}T113000", "Café Müller"))
     put("familie", ev("Müllabfuhr: Papiertonne", d(1), d(2), allday=True))
     put("arbeit", ev("Jour fixe Team", f"{d(1)}T100000", f"{d(1)}T110000", "Videokonferenz"))
     put("familie", ev("Laternenumzug Kita", f"{d(1)}T170000", f"{d(1)}T183000", "Kita Sonnenschein"))

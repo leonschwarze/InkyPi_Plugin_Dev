@@ -7,6 +7,7 @@ Szenarien (Zeiten relativ zur Renderzeit, z. B. So 15.11. 19:10):
   ok       23 Tage online, Woche bis 52 °C, 9,8 GB frei, keine Ausfälle (Standard)
   ausfall  wie ok, dazu Kalender 2× weg (zusammen 40 min, zuletzt Do 3:10)
   warn     Neustart Mi 14:02, Unterspannung, Internet weg Di 2:10–2:50 (Wetter und Kalender), bis 71 °C, 1,2 GB frei
+  viele    sieben Quellen mit zusammen elf Ausfällen, zwei Neustarts, Unterspannung (Fehler 22.11.)
   leer     keine Messwerte (wie auf einem Rechner ohne Pi), keine Geschichte
 """
 import os
@@ -38,6 +39,22 @@ def install(now, kind, pizustand):
         for src in ("Wetter", "Kalender"):
             state["episodes"].append({"src": src, "start": iso(_at(now, 5, 2, 10)), "last": iso(_at(now, 5, 2, 40)),
                                       "end": iso(_at(now, 5, 2, 50))})
+    elif kind == "viele":
+        # Viele verschiedene Ausfälle (Fehlermeldung 22.11.: Text unten wurde abgeschnitten)
+        boot = _at(now, 2, 6, 41)
+        system = {"uptime": (now - boot).total_seconds(), "temp": 49.0, "free": 3.4e9,
+                  "volt": {"now": False, "since_boot": True}}
+        state["boots"] = [pizustand._iso(_at(now, 5, 9, 12))]
+        plan = {"Kalender": [(4, 22, 0, 15), (3, 3, 10, 25), (1, 13, 5, 40)],
+                "Radar": [(6, 11, 20, 30), (2, 16, 0, 10)],
+                "GA": [(5, 6, 5, 90)], "Zug": [(5, 7, 30, 20)], "Pollen": [(3, 10, 0, 180)],
+                "Luftsensoren": [(2, 9, 15, 15)], "Polarlicht": [(1, 19, 0, 60)]}
+        for src, eps in plan.items():
+            for back, hh, mm, dur in eps:
+                start = _at(now, back, hh, mm)
+                end = start + timedelta(minutes=dur)
+                state["episodes"].append({"src": src, "start": iso(start),
+                                          "last": iso(end - timedelta(minutes=15)), "end": iso(end)})
     elif kind == "leer":
         system, state = {}, pizustand.empty()
     pizustand.save(path, state)

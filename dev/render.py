@@ -132,13 +132,15 @@ def main():
                     help="Tagesdashboard: Warnungen aus NINA simulieren (dev/mock_nina.py); keine = wie bisher")
     ap.add_argument("--lauf", default="keine", choices=["keine", "normal", "viel", "leer", "fehlt", "down"],
                     help="Tagesdashboard: Laufbuch in der Nextcloud simulieren (dev/caldav_server.py); keine = Datei fehlt")
-    ap.add_argument("--pi", default="ok", choices=["ok", "ausfall", "warn", "leer"],
+    ap.add_argument("--pi", default="ok", choices=["ok", "ausfall", "warn", "viele", "leer"],
                     help="Tagesdashboard: Zustand des Pi in der Wochenvorschau simulieren (dev/mock_pi.py)")
     ap.add_argument("--display", default="inky", choices=["inky", "mock"])
     ap.add_argument("--font", default="eink", choices=["eink", "mono", "aa"])
     ap.add_argument("--inky-saturation", type=float, default=0.5)
     ap.add_argument("--simulate", action="store_true", help="Ergebnis des Inky-Treibers zusätzlich speichern")
     ap.add_argument("--out", default=str(DEV / "out"))
+    ap.add_argument("--html", action="store_true",
+                    help="gerenderte Seite zusätzlich als <name>.html speichern (z. B. für dev/test_pifuss.py)")
     args = ap.parse_args()
 
     inkypi_src = Path(args.inkypi).resolve() / "src"
@@ -254,10 +256,18 @@ def main():
         tag += f"_seit-{args.seit.replace(':', '').replace('gestern ', 'g')}"
     if args.display == "mock" or args.font != "eink":
         tag += f"_{args.display}-{args.font}"
+    pages = []
+    if args.html:  # InkyPis base_plugin hat take_screenshot_html importiert – dort mitschreiben
+        import plugins.base_plugin.base_plugin as base
+        shoot = base.take_screenshot_html
+        base.take_screenshot_html = lambda html, dims, *a, **k: (pages.append(html), shoot(html, dims, *a, **k))[1]
     for label, res, orientation in parse_sizes(args.sizes):
         cfg = DevConfig(res, orientation, env, args.display, args.inky_saturation)
+        pages.clear()
         image = plugin.generate_image(dict(settings), cfg)
         path = out / f"{tag}_{label}.png"
+        if pages:
+            (out / f"{tag}_{label}.html").write_text(pages[-1], encoding="utf-8")
         image.save(path)
         print(f"gespeichert: {path} {image.size}")
         if args.simulate:

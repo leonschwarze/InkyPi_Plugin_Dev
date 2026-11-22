@@ -182,6 +182,26 @@ for k in range(4):  # Kalender fällt 30 min aus, dann wieder da
     pz.record(t, status.snapshot(), p, system())
 check("Rundlauf: Kalender 1× weg (30 min)", line(SUN, p).startswith("Kalender 1× weg (heute 17:10, 30 min)"))
 
+# ---------------------------------------------------------------- Teile fürs Template (seit 1.39, fitPi)
+p = fresh()
+boot = SUN - timedelta(days=2)
+for src, back in (("Kalender", 4), ("Kalender", 3), ("Radar", 2)):
+    t = SUN - timedelta(days=back)
+    pz.record(t, {src: (t, t)}, p, system())
+    pz.record(t + timedelta(minutes=15), {}, p, system())
+pz.record(SUN - timedelta(days=5), {}, p, system(uptime=3600))                       # erster Neustart
+pz.record(SUN, {}, p, system(uptime=(SUN - boot).total_seconds(), volt={"now": False, "since_boot": True}))
+pz._last_system = system(uptime=(SUN - boot).total_seconds())
+parts = pz.parts(SUN, p)
+kinds = [q["kind"] for q in parts]
+check("Teile: Probleme vor ruhigen Werten", kinds == sorted(kinds, key=lambda k: k != "problem") and "fact" in kinds)
+check("Teile: Zeile fürs Log = alle Langformen", pz.line(SUN, p) == " · ".join(q["text"] for q in parts))
+short = {q["short"] for q in parts if q["kind"] == "problem"}
+check("Kurzformen ohne Klammer", short == {"Unterspannung", "2 Neustarts", "Kalender 2× weg", "Radar 1× weg"}, )
+check("Langform mit Klammer", any(q["text"].startswith("Kalender 2× weg (") for q in parts))
+check("ruhige Werte: kurz = lang", all(q["short"] == q["text"] for q in parts if q["kind"] == "fact"))
+check("summary liefert weiter Texte", all(isinstance(x, str) for x in pz.summary(SUN, pz.load(p), system())[0]))
+
 # ---------------------------------------------------------------- dieser Rechner
 real = pz.read_system()
 check("echte Messwerte lesen ohne Fehler", isinstance(real, dict))

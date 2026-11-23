@@ -19,7 +19,15 @@ git clone https://github.com/leonschwarze/InkyPi_Ausschaltbild
 sudo bash InkyPi_Ausschaltbild/ausschaltbild/install.sh
 ```
 
-Später aktualisieren: `git -C InkyPi_Ausschaltbild pull` und `install.sh` noch einmal ausführen. Alternativ das ZIP-Paket entpacken (bzw. den Ordner `ausschaltbild/` per `scp` auf den Pi kopieren) und dort `sudo bash ausschaltbild/install.sh` ausführen.
+Später aktualisieren: am besten mit den **signierten Updates** aus dem [Tagesdashboard](https://github.com/leonschwarze/InkyPi_Dashboard#installieren-und-aktualisieren-signierte-updates-seit-144) – `sudo inkypi-update` installiert nur Versionen, die mit dem eigenen Schlüssel als Tag `v<Version>` freigegeben sind, auf Wunsch nachts automatisch. Für die erste Installation dann auf einem freigegebenen Tag klonen und vorher prüfen:
+
+```bash
+git -c advice.detachedHead=false clone --branch v1.1 https://github.com/leonschwarze/InkyPi_Ausschaltbild
+git -C InkyPi_Ausschaltbild -c gpg.ssh.allowedSignersFile=/usr/local/inkypi-update/allowed_signers verify-tag v1.1
+sudo bash InkyPi_Ausschaltbild/ausschaltbild/install.sh
+```
+
+Ohne signierte Updates: `git -C InkyPi_Ausschaltbild pull` und `install.sh` noch einmal ausführen.
 
 Das Skript kopiert die Dateien nach `/usr/local/inkypi-ausschaltbild/`, legt die Dienste `inkypi-ausschaltbild.service` (beim Ausschalten) und `inkypi-ausschaltbild-start.service` (nach dem Start) an und schaltet sie ein. Eine ältere Version wird dabei einfach ersetzt – zum Aktualisieren also genauso installieren. Vorher prüft es, ob es InkyPis Einstellungen, die Schrift und den Treiber findet, und speichert eine Vorschau unter `/tmp/ausschaltbild-probe.png`.
 

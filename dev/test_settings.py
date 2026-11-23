@@ -307,6 +307,25 @@ DB_CASES = {
         "runEnabled": "true", "iceEnabled": "true", "polarEnabled": "true", "runMinutes": "60",
         "ninaEnabled": "true", "loadEnabled": "true", "runLogEnabled": "true", "monthEnabled": "true",
         "comicEnabled": None},
+    # 1.41: Klimaeinordnung und Meilensteine (cfgVersion 27) – bei v26 unbekannt, also Standard an
+    "v26 Klima noch unbekannt": {
+        **DB_9, "cfgVersion": "26", "radarEnabled": "true", "airEnabled": "true", "trainRoute": "true",
+        "catEnabled": "true", "catWeather": "true", "catNight": "true", "pollenEnabled": "true", "nightArt": "true",
+        "meteorEnabled": "true", "eclipseEnabled": "true", "planetEnabled": "true", "urlaubEnabled": "true",
+        "wahlEnabled": "true", "issEnabled": "true", "liveEnabled": "true", "pegelEnabled": "true",
+        "piEnabled": "true", "freeEnabled": "true", "adventEnabled": "true", "zielEnabled": "true",
+        "runEnabled": "true", "iceEnabled": "true", "polarEnabled": "true", "runMinutes": "60",
+        "ninaEnabled": "true", "loadEnabled": "true", "runLogEnabled": "true", "monthEnabled": "true",
+        "comicEnabled": "true"},
+    "v27 Karte und Meilensteine aus, Kurve an": {
+        **DB_9, "cfgVersion": "27", "radarEnabled": "true", "airEnabled": "true", "trainRoute": "true",
+        "catEnabled": "true", "catWeather": "true", "catNight": "true", "pollenEnabled": "true", "nightArt": "true",
+        "meteorEnabled": "true", "eclipseEnabled": "true", "planetEnabled": "true", "urlaubEnabled": "true",
+        "wahlEnabled": "true", "issEnabled": "true", "liveEnabled": "true", "pegelEnabled": "true",
+        "piEnabled": "true", "freeEnabled": "true", "adventEnabled": "true", "zielEnabled": "true",
+        "runEnabled": "true", "iceEnabled": "true", "polarEnabled": "true", "runMinutes": "60",
+        "ninaEnabled": "true", "loadEnabled": "true", "runLogEnabled": "true", "monthEnabled": "true",
+        "comicEnabled": "true", "climCurve": "true", "climCard": None, "mileEnabled": None},
 }
 
 

@@ -135,6 +135,9 @@ def main():
     ap.add_argument("--xkcd", default="normal", choices=["normal", "breit", "hoch", "farbig", "lang", "keiner", "nur1x", "down"],
                     help="Tagesdashboard: Sonntagscomic simulieren (dev/mock_xkcd.py; erscheint nur sonntags ohne "
                          "weitere Termine, z. B. DEV_PROTO=frei --time \"2026-11-15 14:20\")")
+    ap.add_argument("--klima", default="normal", choices=["normal", "frost", "sonne", "regen", "trocken", "schnee", "mild",
+                                                          "beispiel", "fern", "keine", "down"],
+                    help="Tagesdashboard: DWD-Tageswerte für Klimaeinordnung und Meilensteine simulieren (dev/mock_klima.py)")
     ap.add_argument("--pi", default="ok", choices=["ok", "ausfall", "warn", "viele", "leer"],
                     help="Tagesdashboard: Zustand des Pi in der Wochenvorschau simulieren (dev/mock_pi.py)")
     ap.add_argument("--display", default="inky", choices=["inky", "mock"])
@@ -188,6 +191,9 @@ def main():
     mock_nina.install(now, args.nina)
     import mock_xkcd  # Comics immer simulieren (erscheinen nur sonntags ohne Termine; sonst bleibt alles wie bisher)
     mock_xkcd.install(now, args.xkcd)
+    if args.plugin == "tagesdashboard":
+        import mock_klima  # Klimadaten immer simulieren (eigene Datei je Lauf, nie echtes Netz)
+        mock_klima.install(now, args.klima, __import__("plugins.tagesdashboard.klima", fromlist=["x"]))
     os.environ["DEV_LAUF"] = args.lauf  # Laufbuch im CalDAV-Testserver (WebDAV-Datei)
 
     settings = dict(BASE_SETTINGS)

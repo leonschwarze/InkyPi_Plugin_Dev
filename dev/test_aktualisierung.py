@@ -69,9 +69,10 @@ SIGNERS.write_text(f'leon namespaces="git" {PUB}\n')
 os.chmod(SIGNERS, 0o644)
 
 GH = T / "gh"
+REPONAME = {"dashboard": "InkyPi_Dashboard", "aus": "InkyPi_Ausschaltbild"}   # wie auf GitHub (freigeben.sh prüft das)
 for repo in ("dashboard", "aus"):
-    sh("git", "init", "-q", "--bare", "-b", "main", GH / f"{repo}.git")
-    sh("git", "clone", "-q", GH / f"{repo}.git", T / "arbeit" / repo)
+    sh("git", "init", "-q", "--bare", "-b", "main", GH / f"{REPONAME[repo]}.git")
+    sh("git", "clone", "-q", GH / f"{REPONAME[repo]}.git", T / "arbeit" / repo)
 
 
 def stand_schreiben(version, kaputt=None):
@@ -158,7 +159,7 @@ KONFIG.write_text(json.dumps({
     "ausschaltbild_ziel": "/usr/local/inkypi-ausschaltbild" if ALS_ROOT else str(T / "aus_ziel"),
     "web": "http://127.0.0.1:8080", "device_json": str(dev_json),
     "systemd": str(T / "systemd"),
-    "repos": {"tagesdashboard": f"file://{GH / 'dashboard.git'}", "ausschaltbild": f"file://{GH / 'aus.git'}"},
+    "repos": {"tagesdashboard": f"file://{GH / 'InkyPi_Dashboard.git'}", "ausschaltbild": f"file://{GH / 'InkyPi_Ausschaltbild.git'}"},
     "neustart": ["bash", str(NEUSTART)], "warte_web_s": 90, "zeichnen_versuche": 1, "zeichnen_pause_s": 1,
 }))
 
@@ -226,7 +227,11 @@ try:
     check("v1.45 abgelehnt: Signatur ungültig" in out, "umgebogenes Tag (fremder Commit, alte Signatur) abgelehnt")
     check("v1.44 abgelehnt: im Code steht Version 1.43" in out, "Tag mit falscher Version im Code abgelehnt")
     check("freigegeben v1.43" in out and "signiert von leon" in out, "… und trotzdem wird v1.43 gefunden")
-    check(installierte_version() == "1.42" and not (T / "daten" / "stand.json").exists(), "--pruefen ändert nichts")
+    check(installierte_version() == "1.42" and "version" not in stand().get("tagesdashboard", {}),
+          "--pruefen installiert nichts")
+    ll = stand().get("letzter_lauf", {})
+    check(stand()["tagesdashboard"].get("bereit") == "v1.43" and ll.get("art") == "prüfen"
+          and "v1.43 liegt bereit" in ll.get("text", ""), "… merkt sich aber „v1.43 liegt bereit“ für die Einstellungsseite")
     for t in ("v1.44", "v1.50", "v9.9", "v1.45"):
         sh("git", "push", "-q", "origin", f":refs/tags/{t}", cwd=w)
         sh("git", "tag", "-d", t, cwd=w, ok=False)
@@ -248,6 +253,9 @@ try:
           and not (IK / "src" / "plugins" / "tagesdashboard" / "aktualisierung").exists(), "nur der Plugin-Ordner")
     rc, out = update("--nur", "tagesdashboard")
     check(rc == 0 and "keine neuere freigegebene Version" in out, "zweiter Lauf: nichts zu tun")
+    ll = stand().get("letzter_lauf", {})
+    check(ll.get("text") == "Dashboard aktuell" and not ll.get("fehler") and ll.get("art") == "von Hand"
+          and "bereit" not in stand()["tagesdashboard"], "… letzter Lauf „Dashboard aktuell“, „bereit“ gelöscht")
 
     stand_schreiben("1.44", kaputt="import")
     taggen("dashboard", "v1.44")
@@ -255,6 +263,9 @@ try:
     check(rc == 1 and "Vortest" in out and "Dashboard gezeichnet" not in out, "v1.44 (lädt nicht): Vortest hält sie auf")
     check(installierte_version() == "1.43", "… Plugin bleibt 1.43")
     check(stand()["fehlversuche"]["tagesdashboard"].get("v1.44") == 1, "… Fehlversuch gezählt")
+    ll = stand().get("letzter_lauf", {})
+    check(ll.get("fehler") == 1 and ll.get("art") == "nachts" and ll.get("text", "").startswith("Dashboard: Fehler – "),
+          "… letzter Lauf zeigt den Fehler")
 
     stand_schreiben("1.45", kaputt="zeichnen")
     taggen("dashboard", "v1.45")
@@ -282,7 +293,7 @@ try:
 
     print("\n— Selbstprüfung des Klons (für install.sh)")
     k = T / "klon"
-    sh("git", "clone", "-q", "--branch", "v1.46", f"file://{GH / 'dashboard.git'}", k)
+    sh("git", "clone", "-q", "--branch", "v1.46", f"file://{GH / 'InkyPi_Dashboard.git'}", k)
     r = subprocess.run([sys.executable, UPDATER, "--konfig", KONFIG, "--klon-pruefen", k], capture_output=True, text=True, env=ENV)
     check(r.returncode == 0 and "Klon geprüft: v1.46" in r.stdout, "Klon auf v1.46: geprüft")
     (k / "tagesdashboard" / "kleidung.py").write_text("# verändert\n")
@@ -307,11 +318,17 @@ try:
     os.chmod(home / ".ssh" / "inkypi_freigabe", 0o600)
     stand_schreiben("1.47")
     fk = T / "freigabe-klon"
-    sh("git", "clone", "-q", f"file://{GH / 'dashboard.git'}", fk)
+    sh("git", "clone", "-q", f"file://{GH / 'InkyPi_Dashboard.git'}", fk)
     fenv = dict(GITENV, HOME=str(home))
     r = sh("bash", ROOT / "aktualisierung" / "freigeben.sh", fk, env=fenv, eingabe="n\n", ok=False)
     check(r.returncode == 0 and "Tagesdashboard 1.47" in r.stdout and "Abgebrochen" in r.stdout
-          and not sh("git", "ls-remote", "--tags", GH / "dashboard.git", "v1.47").stdout, "„n“: nichts freigegeben")
+          and not sh("git", "ls-remote", "--tags", GH / "InkyPi_Dashboard.git", "v1.47").stdout, "„n“: nichts freigegeben")
+    r = subprocess.run(["bash", str(ROOT / "aktualisierung" / "freigeben.sh")], cwd=fk / "tagesdashboard",
+                       env=fenv, input="n\n", capture_output=True, text=True)
+    check(r.returncode == 0 and "Tagesdashboard 1.47" in r.stdout, "aus einem Unterordner gestartet: findet den Klon")
+    r = subprocess.run(["bash", str(ROOT / "aktualisierung" / "freigeben.sh")], cwd=T, env=fenv, input="n\n",
+                       capture_output=True, text=True)
+    check(r.returncode == 1 and "InkyPi_Dashboard" not in r.stdout, "außerhalb eines Klons, Skript nicht im Klon: verweigert")
     r = sh("bash", ROOT / "aktualisierung" / "freigeben.sh", fk, env=fenv, eingabe="j\n", ok=False)
     check(r.returncode == 0 and "Freigegeben: v1.47" in r.stdout, "„j“: v1.47 signiert und gepusht")
     rc, out = update("--pruefen", "--nur", "tagesdashboard")

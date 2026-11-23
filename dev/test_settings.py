@@ -326,6 +326,26 @@ DB_CASES = {
         "runEnabled": "true", "iceEnabled": "true", "polarEnabled": "true", "runMinutes": "60",
         "ninaEnabled": "true", "loadEnabled": "true", "runLogEnabled": "true", "monthEnabled": "true",
         "comicEnabled": "true", "climCurve": "true", "climCard": None, "mileEnabled": None},
+    # 1.42: Schnee-Radar (cfgVersion 28) – bei v27 unbekannt, also Standard an
+    "v27 Schnee noch unbekannt": {
+        **DB_9, "cfgVersion": "27", "radarEnabled": "true", "airEnabled": "true", "trainRoute": "true",
+        "catEnabled": "true", "catWeather": "true", "catNight": "true", "pollenEnabled": "true", "nightArt": "true",
+        "meteorEnabled": "true", "eclipseEnabled": "true", "planetEnabled": "true", "urlaubEnabled": "true",
+        "wahlEnabled": "true", "issEnabled": "true", "liveEnabled": "true", "pegelEnabled": "true",
+        "piEnabled": "true", "freeEnabled": "true", "adventEnabled": "true", "zielEnabled": "true",
+        "runEnabled": "true", "iceEnabled": "true", "polarEnabled": "true", "runMinutes": "60",
+        "ninaEnabled": "true", "loadEnabled": "true", "runLogEnabled": "true", "monthEnabled": "true",
+        "comicEnabled": "true", "climCurve": "true", "climCard": "true", "mileEnabled": "true"},
+    "v28 Schneekappen aus": {
+        **DB_9, "cfgVersion": "28", "radarEnabled": "true", "airEnabled": "true", "trainRoute": "true",
+        "catEnabled": "true", "catWeather": "true", "catNight": "true", "pollenEnabled": "true", "nightArt": "true",
+        "meteorEnabled": "true", "eclipseEnabled": "true", "planetEnabled": "true", "urlaubEnabled": "true",
+        "wahlEnabled": "true", "issEnabled": "true", "liveEnabled": "true", "pegelEnabled": "true",
+        "piEnabled": "true", "freeEnabled": "true", "adventEnabled": "true", "zielEnabled": "true",
+        "runEnabled": "true", "iceEnabled": "true", "polarEnabled": "true", "runMinutes": "60",
+        "ninaEnabled": "true", "loadEnabled": "true", "runLogEnabled": "true", "monthEnabled": "true",
+        "comicEnabled": "true", "climCurve": "true", "climCard": "true", "mileEnabled": "true",
+        "snowCard": "true", "snowNight": None, "snowWeek": "true"},
 }
 
 

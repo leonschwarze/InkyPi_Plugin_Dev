@@ -346,6 +346,27 @@ DB_CASES = {
         "ninaEnabled": "true", "loadEnabled": "true", "runLogEnabled": "true", "monthEnabled": "true",
         "comicEnabled": "true", "climCurve": "true", "climCard": "true", "mileEnabled": "true",
         "snowCard": "true", "snowNight": None, "snowWeek": "true"},
+    # 1.43: Lebende Stadt (cfgVersion 29) – bei v28 unbekannt, also Standard an
+    "v28 Lebende Stadt noch unbekannt": {
+        **DB_9, "cfgVersion": "28", "radarEnabled": "true", "airEnabled": "true", "trainRoute": "true",
+        "catEnabled": "true", "catWeather": "true", "catNight": "true", "pollenEnabled": "true", "nightArt": "true",
+        "meteorEnabled": "true", "eclipseEnabled": "true", "planetEnabled": "true", "urlaubEnabled": "true",
+        "wahlEnabled": "true", "issEnabled": "true", "liveEnabled": "true", "pegelEnabled": "true",
+        "piEnabled": "true", "freeEnabled": "true", "adventEnabled": "true", "zielEnabled": "true",
+        "runEnabled": "true", "iceEnabled": "true", "polarEnabled": "true", "runMinutes": "60",
+        "ninaEnabled": "true", "loadEnabled": "true", "runLogEnabled": "true", "monthEnabled": "true",
+        "comicEnabled": "true", "climCurve": "true", "climCard": "true", "mileEnabled": "true",
+        "snowCard": "true", "snowNight": "true", "snowWeek": "true"},
+    "v29 Lebende Stadt aus": {
+        **DB_9, "cfgVersion": "29", "radarEnabled": "true", "airEnabled": "true", "trainRoute": "true",
+        "catEnabled": "true", "catWeather": "true", "catNight": "true", "pollenEnabled": "true", "nightArt": "true",
+        "meteorEnabled": "true", "eclipseEnabled": "true", "planetEnabled": "true", "urlaubEnabled": "true",
+        "wahlEnabled": "true", "issEnabled": "true", "liveEnabled": "true", "pegelEnabled": "true",
+        "piEnabled": "true", "freeEnabled": "true", "adventEnabled": "true", "zielEnabled": "true",
+        "runEnabled": "true", "iceEnabled": "true", "polarEnabled": "true", "runMinutes": "60",
+        "ninaEnabled": "true", "loadEnabled": "true", "runLogEnabled": "true", "monthEnabled": "true",
+        "comicEnabled": "true", "climCurve": "true", "climCard": "true", "mileEnabled": "true",
+        "snowCard": "true", "snowNight": "true", "snowWeek": "true", "liveCity": None},
 }
 
 

@@ -1,4 +1,4 @@
-"""Streupixel-Prüfstand für die Katzen-Posen (seit 1.34, erweitert 1.35, wie dev/kranz_pruefstand.py).
+"""Streupixel-Prüfstand für die Katzen-Posen (seit 1.34, erweitert 1.35 und 1.43, wie dev/kranz_pruefstand.py).
 
     python dev/katze_pruefstand.py            # nur die Posen seit 1.34
     python dev/katze_pruefstand.py --alle     # alle Posen
@@ -28,7 +28,9 @@ NEW = ["südwester", "fenster", "schneeflocke", "schneemann", "mütze", "decke",
        "drachen", "blätter", "winkt", "pflanze", "fisch", "lichterkette",
        # seit 1.35
        "nebel", "gewitter", "fernglas", "helm", "haltestelle", "niest", "plakat", "karte", "zipfelmütze",
-       "hängematte", "laptop", "kopfhörer", "ball", "flieger", "seifenblasen"]
+       "hängematte", "laptop", "kopfhörer", "ball", "flieger", "seifenblasen",
+       # seit 1.43
+       "schlitten", "glatteis", "stirnband", "comic", "thermometer", "plätzchen", "laterne"]
 COLORS = {"red": ((227, 0, 27), "--cat-red"), "yellow": ((255, 196, 0), "--cat-yellow"),
           "blue": ((0, 130, 201), "--cat-blue"), "green": ((46, 158, 63), "--cat-green")}
 

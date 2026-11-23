@@ -199,11 +199,37 @@ def main():
     print("Advent (seit 1.34)")
     adv = datetime(2026, 12, 3, 9, 0, tzinfo=TZ)
     picks = [katze.choose(adv + timedelta(minutes=15 * i), occasions=["advent"]) for i in range(8)]
-    check(sum(c["main"]["name"] == "lichterkette" for c in picks) == 4, "Lichterkette jedes zweite Mal")
+    names = [c["main"]["name"] for c in picks]
+    check(sum(n in ("lichterkette", "plätzchen") for n in names) == 4, "Advent-Pose jedes zweite Mal")
+    check({"lichterkette", "plätzchen"} <= set(names), f"Lichterkette und Plätzchen wechseln sich ab (seit 1.43) {names}")
     o = next(adv + timedelta(minutes=15 * i) for i in range(4) if katze.occasion_slot(adv + timedelta(minutes=15 * i)))
     check(katze.choose(o, rain(o), occasions=["advent"], feels_like=feels_like)["reason"] == "regen",
           "Wetter geht der Lichterkette vor")
     check(katze.choose(o, occasions=["advent", "geburtstag"])["main"]["name"] == "partyhut", "Geburtstag vor Advent")
+
+    print("Neue Anlässe (seit 1.43)")
+    day = datetime(2026, 11, 24, 10, 0, tzinfo=TZ)
+    for occ, want in (("schneekarte", "schlitten"), ("glaette", "glatteis"), ("laufen", "stirnband"),
+                      ("klima", "thermometer"), ("comic", "comic"), ("laterne", "laterne")):
+        got = [katze.choose(day + timedelta(minutes=15 * i), occasions=[occ])["main"]["name"] for i in range(8)]
+        check(got.count(want) == 4, f"{occ} → {want} jedes zweite Mal ({got.count(want)} von 8)")
+    check("schlitten" in katze.WEATHER_POSES["schnee"], "Schlitten auch bei Schneefall (Wetterkatze)")
+    frosty = [{"dt": day.replace(minute=0) + timedelta(hours=h), "temperature": -3, "wind_speed": 5,
+               "relative_humidity": 90, "icon": "clear-day"} for h in range(-1, 4)]
+    got = [katze.choose(day + timedelta(minutes=15 * i), frosty, occasions=["glaette"], feels_like=feels_like)
+           for i in range(8)]
+    check(sum(c["main"]["name"] == "glatteis" for c in got) == 4 and sum(c["reason"] == "frost" for c in got) == 4,
+          "Glätte bei Frost: Glatteis und Frost-Posen im Wechsel (Winter-Anlass schlägt Frost)")
+    got = [katze.choose(t, rain(t), occasions=["glaette"], feels_like=feels_like)
+           for t in (day + timedelta(minutes=15 * i) for i in range(8))]
+    check(all(c["reason"] == "regen" for c in got), "bei Regen bleibt die Regenkatze (nur Frost/Schnee werden geschlagen)")
+    check(katze.is_lantern("Laternenumzug Kita") and katze.is_lantern("St. Martin am Münster")
+          and katze.is_lantern("Martinszug Beuel") and not katze.is_lantern("Martin Schulz") and not katze.is_lantern(None),
+          "Laternen-Termine erkannt (Laterne, St. Martin, Martinszug; nicht „Martin Schulz“)")
+    check(len(katze.POSES) == 68, f"68 Posen ({len(katze.POSES)})")
+    roof = katze.on_roof(37, 88)
+    check("#FFE500" in roof and "#000000" in roof and "currentColor" not in roof,
+          "Dachkatze nur Schwarz und Gelb (keine CSS-Farben im Nachtbild)")
 
     print("Ratssitzung (seit 1.27)")
     session = datetime(2026, 11, 12, 17, 0, tzinfo=TZ)

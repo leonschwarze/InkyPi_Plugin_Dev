@@ -12,6 +12,8 @@ Szenarien:
   schneeregen  Schneefallgrenze 350 m: in Bonn eher Schneeregen
   taut         Schnee fällt, bleibt aber nicht liegen (Boden warm)
   weihnachten  wie liegt, und am 24.–26.12. morgens 2 cm in Bonn
+  berg         (seit 1.43) Schnee nur in der Höhe: Winterberg 20 cm, Hohe Acht 8 cm, Ölberg 3 cm, Bonn nichts →
+               weiße Gipfel im Nachtbild ohne Schneekappen auf den Dächern
   down         HTTP 503
 Höhen: Bonn 60 m, Ölberg 460 m, Hohe Acht 747 m, Winterberg (Kahler Asten) 842 m.
 """
@@ -22,7 +24,8 @@ import requests
 ELEV = {"Winterberg": 842, "Hohe Acht": 747, "Ölberg": 460}
 HOME_ELEV = 60
 BASE = {"umland": {"Winterberg": 18, "Hohe Acht": 4}, "liegt": {"Winterberg": 25, "Hohe Acht": 9, "Ölberg": 4},
-        "weihnachten": {"Winterberg": 25, "Hohe Acht": 9, "Ölberg": 4}}
+        "weihnachten": {"Winterberg": 25, "Hohe Acht": 9, "Ölberg": 4},
+        "berg": {"Winterberg": 20, "Hohe Acht": 8, "Ölberg": 3}}
 HOME_BASE = {"liegt": 3.0, "weihnachten": 3.0}
 
 
@@ -47,7 +50,7 @@ def series(records, elev, kind, base=0.0, home=True):
             snowy = precip >= 0.05 and r.get("condition") == "snow"
         else:
             snowy = precip >= 0.05 and temp <= 0.5
-        if kind == "schneeregen" and home:
+        if kind in ("schneeregen", "berg") and home:
             snowy = False  # in Bonn Regen/Schneeregen, Schnee erst weiter oben
         sf = round(precip * 0.7, 2) if snowy else 0.0
         if kind == "taut" and home:
@@ -56,7 +59,7 @@ def series(records, elev, kind, base=0.0, home=True):
             depth += sf
             if temp > 1:
                 depth = max(0.0, depth - 0.15 * (temp - 1))
-            if kind in ("liegt", "weihnachten") or (kind == "umland" and not home):
+            if kind in ("liegt", "weihnachten") or (kind in ("umland", "berg") and not home):
                 depth = max(depth, base)
         if kind == "weihnachten" and home and dt.month == 12 and dt.day in (24, 25, 26):
             depth = max(depth, 2.0)

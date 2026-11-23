@@ -15,6 +15,8 @@ Geprüft (Fehler bis 1.31: ohne Zug bzw. ohne Wochentag zeichnete es bei 5-min-T
   * Takt 10, 15, 20 min                → jede Runde neu (der Cache verlängert nie; Fehler aus 1.3)
   * Grenze (Nachrichten ab 6:00)       → erste Runde ab 6:00 zeichnet neu, auch mitten im Ruhetakt
   * Takt unbekannt                     → Verhalten wie bis 1.31 mit Zug (1 min Toleranz)
+  * Nachtbild „Nachts ruhig halten“    → einmal pro Nacht; mit „Lebende Stadt“ (seit 1.43) zur ersten Runde jeder
+                                         vollen Stunde (dieselben Daten, nur die Stadt geht mit der Uhr)
 """
 import os
 import sys
@@ -47,6 +49,8 @@ mock_radar.install(START, "trocken")
 mock_luft.install(START, "gut")
 mock_pollen.install(START, "gut")
 mock_pegel.install(START, "keine")
+import mock_schnee  # noqa: E402  (Schneedaten: nie echtes Netz)
+mock_schnee.install(START, "normal")
 import mock_nina  # noqa: E402  (Warnungen aus NINA seit 1.38: nie echtes Netz)
 mock_nina.install(START, "keine")
 mock_bahn.install(START, "ok")
@@ -162,6 +166,20 @@ run("Zug Dienstag 6:30–8:15: davor 15 min, im Fenster 5 min, danach 15 min",
     {"trainEnabled": "true", "trainDi": "true"}, 5, G, H, [s[i].strftime("%H:%M") for i in idx])
 
 run("Takt unbekannt: 1 min Toleranz wie bisher", {"trainEnabled": "false"}, None, A, B, pick(A, 5, B, every3))
+
+# Nachtbild (23–6 Uhr): mit „Nachts ruhig halten“ einmal pro Nacht, mit „Lebende Stadt“ (seit 1.43) stündlich
+N0, N1 = START.replace(hour=22, minute=50), START.replace(hour=22, minute=50) + timedelta(hours=7, minutes=30)
+s = schedule(N0, 15, N1)
+first = next(i for i, t in enumerate(s) if t.hour == 23)
+hourly = [first] + [next(i for i, t in enumerate(s) if t >= (N0 + timedelta(hours=k)).replace(minute=0))
+                    for k in range(2, 8)]
+morning = next(i for i, t in enumerate(s) if 6 <= t.hour < 12)  # nach dem Nachtbild wieder alle 15 min
+day = list(range(morning, len(s)))
+NIGHT = {"trainEnabled": "false", "nightEnabled": "true", "nightArt": "true", "nightFreeze": "true"}
+run("Nachtbild ohne Lebende Stadt: einmal pro Nacht", dict(NIGHT, liveCity="false"), 15, N0, N1,
+    [s[i].strftime("%H:%M") for i in [0, first] + day])
+run("Nachtbild mit Lebender Stadt: stündlich (seit 1.43)", dict(NIGHT, liveCity="true"), 15, N0, N1,
+    [s[i].strftime("%H:%M") for i in sorted(set([0] + hourly + day))])
 
 print("alles ok" if not fails else f"{fails} Fehler")
 caldav_server.stop() if hasattr(caldav_server, "stop") else None

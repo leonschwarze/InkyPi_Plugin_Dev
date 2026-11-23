@@ -155,7 +155,7 @@ def fake_render(dimensions, html, css, params):
 plugin.render_image = fake_render
 cfg = render.DevConfig((800, 480), "horizontal", {"NEXTCLOUD_APP_PASSWORD": password})
 cfg.values["plugin_cycle_interval_seconds"] = 300
-settings = dict(render.BASE_SETTINGS, nextcloudUrl=url, username=user)
+settings = dict(render.BASE_SETTINGS, nextcloudUrl=url, username=user, liveCity="false")  # Nachtbild bleibt stehen
 
 
 def step(kind, minutes, refetch=True):
@@ -187,6 +187,19 @@ check("Nacht: erstes Nachtbild", step("keine", 5))
 check("Nacht: eingefroren bis 6 Uhr", not step("keine", 60))
 check("Nacht: Warnung um 1:35 → sofort neu", step("zwei", 5) and seen[-1]["more"] == 1)
 check("Nacht: danach wieder eingefroren", not step("zwei", 60))
+
+# Lebende Stadt (seit 1.43): Daten bleiben die der Nacht, gezeichnet wird zur vollen Stunde; eine Warnung kommt
+# trotzdem sofort
+settings["liveCity"] = "true"
+clock["now"] = datetime(2026, 11, 24, 0, 30, tzinfo=TZ) - timedelta(minutes=5)
+module._NIGHT_CACHE.clear()
+check("Lebende Stadt: erstes Nachtbild (0:30)", step("keine", 5))
+check("Lebende Stadt: 0:50 aus dem Speicher", not step("keine", 20))
+check("Lebende Stadt: 1:00 neu gezeichnet", step("keine", 10))
+check("Lebende Stadt: … mit den Daten der Nacht (kein neuer Abruf der Warnungen nötig)", seen[-1] is None)
+check("Lebende Stadt: Warnung um 1:10 → sofort neu", step("zwei", 10) and seen[-1]["more"] == 1)
+check("Lebende Stadt: 1:40 aus dem Speicher", not step("zwei", 30))
+check("Lebende Stadt: 2:00 neu, Warnung bleibt im Bild", step("zwei", 20) and seen[-1]["more"] == 1)
 
 print()
 print("Alles in Ordnung." if not FAILED else f"{len(FAILED)} Fehler: {', '.join(FAILED)}")

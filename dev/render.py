@@ -97,7 +97,7 @@ def main():
     ap.add_argument("plugin", choices=PLUGINS)
     ap.add_argument("--inkypi", default=os.environ.get("INKYPI_DIR", str(REPO.parent / "InkyPi")))
     ap.add_argument("--time", default="2026-11-10 15:07", help='feste Uhrzeit, z. B. "2026-11-10 21:12"')
-    ap.add_argument("--scenario", default="herbst", choices=["herbst", "winter", "sommer", "ruhig", "klar", "trocken", "nebel", "bedeckt", "regenbogen", "gewitter", "nebeltag", "reif"])
+    ap.add_argument("--scenario", default="herbst", choices=["herbst", "winter", "sommer", "ruhig", "klar", "trocken", "nebel", "bedeckt", "regenbogen", "gewitter", "nebeltag", "reif", "regennacht"])
     ap.add_argument("--sizes", default="800x480,480x800v,1600x1200")
     ap.add_argument("--set", action="append", default=[], metavar="KEY=VALUE", help="Plugin-Einstellung setzen")
     ap.add_argument("--fail", choices=["wetter", "kalender", "uv"], help="Ausfall einer Datenquelle simulieren")
@@ -139,8 +139,9 @@ def main():
                                                           "beispiel", "fern", "keine", "down"],
                     help="Tagesdashboard: DWD-Tageswerte für Klimaeinordnung und Meilensteine simulieren (dev/mock_klima.py)")
     ap.add_argument("--schnee", default="normal", choices=["normal", "umland", "liegt", "schneeregen", "taut",
-                                                           "weihnachten", "down"],
-                    help="Schnee-Radar (Open-Meteo, seit 1.42): Schnee in Bonn wie im Wetter-Szenario, Umland, liegt …")
+                                                           "weihnachten", "berg", "down"],
+                    help="Schnee-Radar (Open-Meteo, seit 1.42): Schnee in Bonn wie im Wetter-Szenario, Umland, liegt …; "
+                         "berg (seit 1.43): Schnee nur oben, auch auf dem Ölberg → weiße Gipfel im Nachtbild")
     ap.add_argument("--pi", default="ok", choices=["ok", "ausfall", "warn", "viele", "leer"],
                     help="Tagesdashboard: Zustand des Pi in der Wochenvorschau simulieren (dev/mock_pi.py)")
     ap.add_argument("--display", default="inky", choices=["inky", "mock"])

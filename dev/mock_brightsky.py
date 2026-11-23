@@ -17,6 +17,7 @@ Die beiden letzten sind für die Wäsche-Karte; sie haben keine Warnungen.
 "reif" (seit 1.37): klare, feuchte Frostnacht bis heute Abend trocken – morgens Reif (Glätte-Hinweis), mittags
 Lauf-Fenster.
 "nebel" und "bedeckt" (wie herbst, aber die kommende Nacht neblig bzw. bedeckt) für das Nachtbild.
+"regennacht" (seit 1.43): Regen und volle Bewölkung von 17 bis 9 Uhr – Mond verdeckt, Dachkatze im Nachtbild.
 """
 import math
 from datetime import datetime, timedelta
@@ -75,6 +76,9 @@ def hourly(now, scenario="herbst", shift=None):
             icon, cloud, precip, prob = "fog", 100, 0, 10
         if scenario == "bedeckt" and day == 1:
             icon, cloud = "cloudy", 95
+        # seit 1.43: verregnete Nacht (Mond verdeckt → Dachkatze), auch für Uhrzeiten nach Mitternacht
+        if scenario == "regennacht" and (day == 0 and (hour >= 17 or hour < 9) or day == 1 and hour < 9):
+            icon, cloud, precip, prob = "rain", 100, 0.6, 90
         if scenario == "regenbogen" and day == 0 and 14 <= hour <= 16:  # Schauer bei Sonne (Ostereier: Regenbogen)
             icon, cloud, precip, prob, sunshine = "rain", 60, 0.4, 60, 25
         if scenario == "reif" and day <= 0:  # klar und trocken bis heute Abend (danach wie herbst)

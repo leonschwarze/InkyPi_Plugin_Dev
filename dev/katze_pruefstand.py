@@ -1,8 +1,9 @@
-"""Streupixel-Prüfstand für die Katzen-Posen (seit 1.34, erweitert 1.35 und 1.43, wie dev/kranz_pruefstand.py).
+"""Streupixel-Prüfstand für die Katzen-Posen (seit 1.34, erweitert 1.35, 1.43 und 1.46, wie dev/kranz_pruefstand.py).
 
     python dev/katze_pruefstand.py            # nur die Posen seit 1.34
     python dev/katze_pruefstand.py --alle     # alle Posen
     python dev/katze_pruefstand.py --wo       # dazu die Lage jedes fremden Pixels (Einheiten der Pose)
+    python dev/katze_pruefstand.py igel karte # nur diese Posen (seit 1.46)
 
 Jede Pose wird in den drei Größen von placeCat (k = 1, 0,9, 0,8) und vier Lagen im Subpixel-Raster
 (Viertelpixel) gerendert, mit eink.snap eingerastet und gezählt: Pixel in einer Displayfarbe, die die Pose gar
@@ -30,13 +31,23 @@ NEW = ["südwester", "fenster", "schneeflocke", "schneemann", "mütze", "decke",
        "nebel", "gewitter", "fernglas", "helm", "haltestelle", "niest", "plakat", "karte", "zipfelmütze",
        "hängematte", "laptop", "kopfhörer", "ball", "flieger", "seifenblasen",
        # seit 1.43
-       "schlitten", "glatteis", "stirnband", "comic", "thermometer", "plätzchen", "laterne"]
-COLORS = {"red": ((227, 0, 27), "--cat-red"), "yellow": ((255, 196, 0), "--cat-yellow"),
-          "blue": ((0, 130, 201), "--cat-blue"), "green": ((46, 158, 63), "--cat-green")}
+       "schlitten", "glatteis", "stirnband", "comic", "thermometer", "plätzchen", "laterne",
+       # seit 1.46: saisonale Gäste
+       "rotkehlchen", "kröte", "eichhörnchen", "igel"]
+# Verglichen wird mit der Palette, die eink.snap ausgibt (reine Displayfarben), nicht mit den Gestaltungsfarben:
+# bis 1.45 standen hier die Gestaltungsfarben mit Toleranz 60 – Rot und Gelb lagen zufällig noch darin, Blau
+# (0, 130, 201 gegen 0, 0, 255) und Grün nie. Fremde blaue oder grüne Pixel wurden deshalb nicht gezählt.
+# Bekannte Streupixel älterer Posen, erst mit der Korrektur von 1.46 gefunden (Kreuzung zweier Farblinien:
+# Fluss über dem Kartenfalz, Pfosten am grünen Schildrand, Stiel unter den Blüten) – gemeldet, nicht als Fehler
+# gezählt, solange es nicht mehr werden; Zeichnungen unverändert (Korrektur angeboten, nicht beauftragt).
+KNOWN = {"karte": 1, "haltestelle": 1, "niest": 2}
+COLORS = {"red": (tuple(eink.PURE[eink.RED]), "--cat-red"), "yellow": (tuple(eink.PURE[eink.YELLOW]), "--cat-yellow"),
+          "blue": (tuple(eink.PURE[eink.BLUE]), "--cat-blue"), "green": (tuple(eink.PURE[eink.GREEN]), "--cat-green")}
 
 
 def main():
-    names = list(katze.POSES) if "--alle" in sys.argv else NEW
+    picked = [a for a in sys.argv[1:] if not a.startswith("--")]  # seit 1.46: einzelne Posen
+    names = picked or (list(katze.POSES) if "--alle" in sys.argv else NEW)
     css = (DEV.parent / "tagesdashboard/render/tagesdashboard.css").read_text(encoding="utf-8")
     cat_css = css[css.index("/* ---------------- Katze"):css.index("/* ---------------- Statusanzeige")]
     exe = os.path.realpath(os.popen("which chromium-headless-shell").read().strip())
@@ -67,8 +78,9 @@ def main():
                                        for i in hit])
                     worst = max(worst, bad)
             if name in NEW:  # ältere Posen nur melden (spielt, schwarz, kürbis: je 1 Pixel, Stand 1.33)
-                bad_total += worst
-            print(f"  {'ok    ' if worst == 0 else 'FEHLER'}  {name}: höchstens {worst} fremde Pixel ({', '.join(sorted(used)) or 'nur Schwarz'})")
+                bad_total += max(0, worst - KNOWN.get(name, 0))
+            label = "ok    " if worst == 0 else "bekannt" if worst <= KNOWN.get(name, -1) else "FEHLER"
+            print(f"  {label:6s}  {name}: höchstens {worst} fremde Pixel ({', '.join(sorted(used)) or 'nur Schwarz'})")
         b.close()
     print("Alles in Ordnung." if bad_total == 0 else f"{bad_total} fremde Pixel.")
     sys.exit(1 if bad_total else 0)

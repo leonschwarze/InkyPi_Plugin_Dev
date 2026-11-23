@@ -8,7 +8,7 @@ das prüft man mit dev/render.py und Hinsehen.
 import os
 import sys
 import xml.etree.ElementTree as ET
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -79,6 +79,10 @@ def outside_viewbox():
 
 
 def main():
+    # Die Prüfungen bis „Saisonale Gäste“ stammen aus der Zeit vor 1.46 und laufen oft im November (Igel-Saison):
+    # dort ohne Gäste, damit sie weiter genau das prüfen, wofür sie geschrieben wurden.
+    season = katze.GUEST_SEASON
+    katze.GUEST_SEASON = {}
     now = datetime(2026, 11, 10, 15, 7, tzinfo=TZ)
     print("Wetterregeln (C)")
     check(reason(now) is None, "ruhiges Wetter → keine Wetter-Pose")
@@ -226,7 +230,7 @@ def main():
     check(katze.is_lantern("Laternenumzug Kita") and katze.is_lantern("St. Martin am Münster")
           and katze.is_lantern("Martinszug Beuel") and not katze.is_lantern("Martin Schulz") and not katze.is_lantern(None),
           "Laternen-Termine erkannt (Laterne, St. Martin, Martinszug; nicht „Martin Schulz“)")
-    check(len(katze.POSES) == 68, f"68 Posen ({len(katze.POSES)})")
+    check(len(katze.POSES) == 72, f"72 Posen ({len(katze.POSES)}, seit 1.46 mit vier Gästen)")
     roof = katze.on_roof(37, 88)
     check("#FFE500" in roof and "#000000" in roof and "currentColor" not in roof,
           "Dachkatze nur Schwarz und Gelb (keine CSS-Farben im Nachtbild)")
@@ -255,6 +259,43 @@ def main():
     c = katze.choose(occ, occasions=["rat", "waesche"])
     check(c["main"]["name"] == "rednerpult", "Ratssitzung geht der Wäsche-Karte vor")
     check(not {"rednerpult", "akten"} & set(katze.EVERYDAY), "Ratssitzungs-Posen kommen nie im Alltag")
+
+    print("Saisonale Gäste (seit 1.46)")
+    katze.GUEST_SEASON = season
+    months = {m: katze.guest_of(date(2026, m, 15)) for m in range(1, 13)}
+    check(months == {1: "rotkehlchen", 2: "rotkehlchen", 3: "kröte", 4: "kröte", 5: None, 6: None, 7: None, 8: None,
+                     9: "eichhörnchen", 10: "igel", 11: "igel", 12: "rotkehlchen"}, f"Saison je Monat {months}")
+    day0 = datetime(2026, 11, 24, 0, 0, tzinfo=TZ)
+    ticks = [day0 + timedelta(minutes=15 * i) for i in range(96)]
+    picks = [katze.choose(t) for t in ticks]
+    guests = [t for t, c in zip(ticks, picks) if c["reason"] == "gast"]
+    check(len(guests) == 24, f"selten: jedes vierte Bild ({len(guests)} von 96)")
+    check(sorted(t.hour for t in guests) == list(range(24)), "genau einmal pro Stunde")
+    check(all(c["main"]["name"] == "igel" for c in picks if c["reason"] == "gast"), "im November kommt der Igel")
+    check(not any(katze.occasion_slot(t) for t in guests), "nie auf einem Anlass-Takt (Zeitung, Geburtstag … bleiben)")
+    shifts = {tuple(t.minute for t in ticks[:8] if katze.guest_slot(t.replace(day=d))) for d in range(1, 15)}
+    check(len(shifts) > 1, "welcher Takt den Gast bringt, wechselt von Tag zu Tag")
+    g = guests[0]
+    check(katze.choose(g, rain(g), feels_like=feels_like)["reason"] == "gast", "Gast kommt auch bei Regen (Leons Wahl)")
+    check(katze.choose(g, egg="narr")["main"]["name"] == "narr", "Osterei geht dem Gast vor")
+    check(katze.choose(g, guests=False)["reason"] is None, "guests=False → kein Gast")
+    news = [day0.replace(hour=6) + timedelta(minutes=15 * i) for i in range(14)]
+    with_g = [katze.choose(t, occasions=["nachrichten"])["main"]["name"] for t in news]
+    without = [katze.choose(t, occasions=["nachrichten"], guests=False)["main"]["name"] for t in news]
+    check(with_g.count("zeitung") == without.count("zeitung") == 7, "Anlass-Posen kommen genauso oft wie ohne Gäste")
+    bday = [katze.choose(t, occasions=["geburtstag"])["main"]["name"] for t in news]
+    check(bday.count("partyhut") == 7 and bday.count("igel") in (3, 4), f"Geburtstag unberührt, Gast dazwischen {bday}")
+    july = datetime(2027, 7, 14, 0, 0, tzinfo=TZ)
+    check(not any(katze.choose(july + timedelta(minutes=15 * i))["reason"] == "gast" for i in range(96)),
+          "im Sommer (Mai–August) kein Gast")
+    for month, name in ((1, "rotkehlchen"), (3, "kröte"), (9, "eichhörnchen")):
+        d = datetime(2027, month, 12, 0, 0, tzinfo=TZ)
+        t = next(d + timedelta(minutes=15 * i) for i in range(96) if katze.guest_slot(d + timedelta(minutes=15 * i)))
+        c = katze.choose(t)
+        check(c["main"]["name"] == name, f"{month}. Monat: {name}")
+        check(c["spots"][0] == "kopf" or katze.is_flat(name), f"{name}: hohe Pose zuerst auf die Kopfzeile")
+    check(not set(katze.GUEST_POSES) & set(katze.EVERYDAY), "Gäste kommen nie im Alltag")
+    check(katze.is_flat("igel") and katze.is_flat("kröte"), "Igel und Kröte sind flach (passen auf jede Linie)")
 
     print("Zeichnungen")
     for name in katze.POSES:

@@ -179,8 +179,14 @@ def seed(home, base):
     mkcal("aufgaben", "Aufgaben", "#999999", comps=("VTODO",))  # muss ignoriert werden
 
     import os
-    # DEV_PROTO=frei (seit 1.40, Sonntagscomic): heute nur das Frühstück am Morgen, danach frei
-    if "frei" not in os.environ.get("DEV_PROTO", ""):
+    # DEV_PROTO=frei (seit 1.40, Sonntagscomic): heute nur das Frühstück am Morgen, danach frei;
+    # DEV_PROTO=feierabend (seit 1.47): der letzte Termin endet um 17:30
+    if "feierabend" in os.environ.get("DEV_PROTO", ""):
+        # Feierabend (seit 1.47): heute drei Termine, der letzte endet um 17:30
+        put("personal", ev("Frühstück mit Anna", f"{d(0)}T080000", f"{d(0)}T090000", "Café Müller"))
+        put("personal", ev("Zahnarzt Dr. Weber", f"{d(0)}T130000", f"{d(0)}T134500", "Poppelsdorfer Allee 12"))
+        put("arbeit", ev("Ausschusssitzung", f"{d(0)}T150000", f"{d(0)}T173000", "Stadthaus"))
+    elif "frei" not in os.environ.get("DEV_PROTO", ""):
         put("personal", ev("Frühstück mit Anna", f"{d(0)}T080000", f"{d(0)}T090000", "Café Müller"))
         put("personal", ev("Zahnarzt Dr. Weber", f"{d(0)}T163000", f"{d(0)}T171500", "Poppelsdorfer Allee 12"))
         put("arbeit", ev("Ausschusssitzung", f"{d(0)}T180000", f"{d(0)}T203000", "Stadthaus"))

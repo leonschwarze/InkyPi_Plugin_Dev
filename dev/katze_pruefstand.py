@@ -33,7 +33,9 @@ NEW = ["südwester", "fenster", "schneeflocke", "schneemann", "mütze", "decke",
        # seit 1.43
        "schlitten", "glatteis", "stirnband", "comic", "thermometer", "plätzchen", "laterne",
        # seit 1.46: saisonale Gäste
-       "rotkehlchen", "kröte", "eichhörnchen", "igel"]
+       "rotkehlchen", "kröte", "eichhörnchen", "igel",
+       # seit 1.47: Feierabend
+       "sessel"]
 # Verglichen wird mit der Palette, die eink.snap ausgibt (reine Displayfarben), nicht mit den Gestaltungsfarben:
 # bis 1.45 standen hier die Gestaltungsfarben mit Toleranz 60 – Rot und Gelb lagen zufällig noch darin, Blau
 # (0, 130, 201 gegen 0, 0, 255) und Grün nie. Fremde blaue oder grüne Pixel wurden deshalb nicht gezählt.

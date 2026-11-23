@@ -230,7 +230,7 @@ def main():
     check(katze.is_lantern("Laternenumzug Kita") and katze.is_lantern("St. Martin am Münster")
           and katze.is_lantern("Martinszug Beuel") and not katze.is_lantern("Martin Schulz") and not katze.is_lantern(None),
           "Laternen-Termine erkannt (Laterne, St. Martin, Martinszug; nicht „Martin Schulz“)")
-    check(len(katze.POSES) == 72, f"72 Posen ({len(katze.POSES)}, seit 1.46 mit vier Gästen)")
+    check(len(katze.POSES) == 73, f"73 Posen ({len(katze.POSES)}, seit 1.47 mit dem Sessel)")
     roof = katze.on_roof(37, 88)
     check("#FFE500" in roof and "#000000" in roof and "currentColor" not in roof,
           "Dachkatze nur Schwarz und Gelb (keine CSS-Farben im Nachtbild)")

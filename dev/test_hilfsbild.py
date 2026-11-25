@@ -217,6 +217,45 @@ d = module.Tagesdashboard.DEFAULTS if hasattr(module.Tagesdashboard, "DEFAULTS")
 for k, v in tasten.NIGHT_DEFAULTS.items():
     check(d.get(k) == v, f"Dienst und Dashboard: Standard {k} = {v}")
 
+# ---------------------------------------------------------------- Pi-Updates aus der Datei (seit 1.55)
+hd = __import__("plugins.tagesdashboard.hilfsdaten", fromlist=["x"])
+APT_AUS = ("Inst a [1] (2 Debian-Security:12/stable-security [arm64])\nInst b [1] (2 Debian:12/stable [arm64])\n"
+           "2 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.\n")
+apt_calls = []
+orig_run, orig_bg = hd._run, hd.APT_HINTERGRUND
+
+
+def apt_run(cmd, timeout=3):
+    if "apt-get" in cmd:
+        apt_calls.append(cmd)
+        return APT_AUS
+    return orig_run(cmd, timeout)
+
+
+hd._run, hd.APT_HINTERGRUND = apt_run, False
+hd._apt_zuletzt.clear()
+fresh()
+clock["now"] = START
+c = cfg()
+c.config_file = str(TMP / "device.json")
+APT_PFAD = TMP / hd.APT_DATEI
+plugin.generate_image(dict(BASE), c)
+check(APT_PFAD.exists() and len(apt_calls) == 1, "Pi-Updates: das normale Zeichnen stößt die Abfrage an, Ergebnis steht in der Datei")
+import json as _json  # noqa: E402
+check(_json.loads(APT_PFAD.read_text())["n"] == 2, "Pi-Updates: Datei enthält die Zahl (2)")
+state(neu=9, hilfe_bis=clock["now"].timestamp() + 60)
+plugin.generate_image(dict(BASE), c)
+upd = [x["text"] for a in calls[-1][1]["hilfe"]["abschnitte"] if a["key"] == "updates" for x in a["lines"]]
+check("hilfe" in calls[-1][1] and upd[:1] == ["Pi: 2 Updates (1 Sicherheit)"], f"Pi-Updates: Hilfsbild zeigt die Zahl aus der Datei ({upd[:1]})")
+check(len(apt_calls) == 1, "Pi-Updates: Taste D fragt apt nicht noch einmal")
+c2 = cfg()   # ohne config_file (Entwicklungsrechner): keine Abfrage, keine Zeile
+n = len(apt_calls)
+fresh(); clock["now"] = START
+plugin.generate_image(dict(BASE), c2)
+check(len(apt_calls) == n, "Pi-Updates: ohne InkyPi-Konfiguration keine Abfrage")
+hd._run, hd.APT_HINTERGRUND = orig_run, orig_bg
+hd._apt_zuletzt.clear()
+
 print()
 print("Alles ok." if not fails else f"{fails} Fehler.")
 sys.exit(1 if fails else 0)

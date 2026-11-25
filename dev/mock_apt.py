@@ -8,6 +8,9 @@ Szenarien:
   aktuell  0 Updates
   updates  12 Updates, keine Sicherheit
   sicher   12 Updates, davon 3 Sicherheit, Neustart wegen neuem Kernel (Problemfall)
+  klemmt   Zahl 2 Tage alt, Abfrage klemmt (seit 1.55)
+  fehler   nie eine Zahl, Abfrage ohne Ergebnis (seit 1.55)
+  pruefen  erste Abfrage läuft noch („Updates werden geprüft …“, seit 1.54)
   alt      4 Updates, Paketlisten 12 Tage alt
 """
 
@@ -18,14 +21,18 @@ _APT = {
     "sicher": "".join(f"Inst pkg{i} [1.0] (1.1 {'Debian-Security:12/stable-security' if i < 3 else 'Debian:12.7/stable'}"
                        " [arm64])\n" for i in range(12))
     + "12 upgraded, 1 newly installed, 0 to remove and 0 not upgraded.\n",
+    "klemmt": "".join(f"Inst pkg{i} [1.0] (1.1 Debian:12.7/stable [arm64])\n" for i in range(5))
+    + "5 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.\n",
     "alt": "".join(f"Inst pkg{i} [1.0] (1.1 Debian:12.7/stable [arm64])\n" for i in range(4))
     + "4 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.\n",
 }
 
 
 def install(kind, hilfsdaten, now):
-    def lage(_now, run=None, read=None):
+    def lage(_now, run=None, read=None, pfad=None):
         erg = hilfsdaten.apt_auswerten(_APT.get(kind))
         return {"n": erg[0] if erg else None, "sicher": erg[1] if erg else 0,
-                "neustart": "kernel" if kind == "sicher" else None, "alter": 12.4 if kind == "alt" else 0.5 if erg else None}
+                "neustart": "kernel" if kind == "sicher" else None, "alter": 12.4 if kind == "alt" else 0.5 if erg else None,
+                "laeuft": kind == "pruefen", "stand_alt": "23.11." if kind == "klemmt" else None,
+                "fehler": kind == "fehler"}
     hilfsdaten.apt_lage = lage

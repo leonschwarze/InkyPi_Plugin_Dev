@@ -5,10 +5,15 @@
 Prüft: Ausgabe von `apt-get -s dist-upgrade` (Anzahl aus der Schlusszeile, Sicherheit aus den Quellen, neu
 installierte Pakete zählen nicht, unbrauchbare Ausgabe = unbekannt statt „0“), Kernel-Vergleich für den
 Neustart (gleiche Art, neuere Version, ABI-Nummer, fremde Kernelarten, Hinweisdatei), Alter der Paketlisten,
-Zeilen (Einzahl, rot nur bei Sicherheit/Neustart/alten Listen), Merken des Ergebnisses und frühere Wiederholung
-nach einem Fehlschlag, Zusammenbau im Abschnitt „Updates“, Fehler werfen nie.
+Zeilen (Einzahl, rot nur bei Sicherheit/Neustart/alten Listen), Ergebnisdatei (seit 1.55: dreimal am Tag, atomar
+geschrieben, Lesen während des Schreibens, Rückfall auf den letzten Stand), Abfrage im Hintergrund, Zusammenbau
+im Abschnitt „Updates“, Fehler werfen nie.
 """
+import json
+import os
 import sys
+import tempfile
+import threading
 import time
 from datetime import datetime
 from pathlib import Path
@@ -49,15 +54,38 @@ def fake(answers):
 
     def run(cmd, timeout=3):
         calls.append((list(cmd), timeout))
-        key = cmd[2] if cmd[0] == "env" else cmd[0]
+        key = "apt-get" if "apt-get" in cmd else cmd[2] if cmd[0] == "env" else cmd[0]
         val = answers.get(key)
         return val() if callable(val) else val
     run.calls = calls
     return run
 
 
+hd.APT_HINTERGRUND = False     # die meisten Prüfungen laufen der Reihe nach; der Hintergrund hat einen eigenen Abschnitt unten
+
+
+TMP = tempfile.mkdtemp(prefix="pi_updates_")
+PFAD = os.path.join(TMP, hd.APT_DATEI)
+
+
 def reset():
-    hd._apt_gemerkt.clear()
+    hd._apt_zuletzt.clear()
+    if hd._apt_sperre.locked():
+        hd._apt_sperre.release()
+    for f in os.listdir(TMP):
+        os.remove(os.path.join(TMP, f))
+
+
+def warte_auf_ende():
+    for _ in range(200):
+        if not hd._apt_sperre.locked():
+            return
+        time.sleep(0.05)
+
+
+def datei():
+    with open(PFAD, encoding="utf-8") as f:
+        return json.load(f)
 
 
 # ------------------------------------------------------------------------------------------ apt auswerten
@@ -109,35 +137,177 @@ check("Neustart auch ohne bekannte Zahl", [x["text"] for x in hd.apt_zeilen({"n"
 check("nichts bekannt → keine Zeilen", hd.apt_zeilen({"n": None, "neustart": None, "alter": None}) == [])
 check("alte Listen ohne bekannte Zahl: kein Hinweis", hd.apt_zeilen({"n": None, "alter": 30}) == [])
 
-# ------------------------------------------------------------------------------------------ Merken
+# ------------------------------------------------------------------------------------------ Datei, Intervall
 reset()
 run = fake({"apt-get": APT, "uname": RPI, "ls": RPI, "find": vor(1)})
-l1 = hd.apt_lage(NOW, run, lambda p: None)
-l2 = hd.apt_lage(NOW, run, lambda p: None)
-check("Lage vollständig", l1 == {"n": 4, "sicher": 3, "neustart": None, "alter": l1["alter"]} and abs(l1["alter"] - 1) < 0.01)
-check("apt läuft nur einmal (zweiter Aufruf aus dem Gedächtnis), mit LC_ALL=C und Zeitgrenze",
-      sum(1 for c, _ in run.calls if "apt-get" in c) == 1
-      and run.calls[0] == (["env", "LC_ALL=C", "apt-get", "-s", "dist-upgrade"], hd.APT_TIMEOUT))
-hd._apt_gemerkt["bis"] = time.time() - 1
-hd.apt_lage(NOW, run, lambda p: None)
-check("nach Ablauf wieder", sum(1 for c, _ in run.calls if "apt-get" in c) == 2)
+check("ohne Pfad (Entwicklungsrechner) nichts angestoßen", hd.apt_anstossen(None, run) is False and not run.calls)
+check("Pfad nur mit InkyPi-Konfiguration", hd.apt_pfad(object()) is None
+      and hd.apt_pfad(type("C", (), {"config_file": "/x/y/device.json"})()) == f"/x/y/{hd.APT_DATEI}")
+check("erste Abfrage: gestartet", hd.apt_anstossen(PFAD, run) is True)
+d = datei()
+check("Datei hat Zahl, Sicherheit, Zeit, ok", (d["n"], d["sicher"], d["ok"], d["v"]) == (4, 3, True, 1) and abs(d["t"] - time.time()) < 5)
+check("apt läuft mit nice, LC_ALL=C und 180 s",
+      run.calls[0] == (hd.APT_BEFEHL, 180) and hd.APT_BEFEHL[:3] == ["nice", "-n", "19"] and "LC_ALL=C" in hd.APT_BEFEHL)
+check("kein Rest der Nebendatei", [f for f in os.listdir(TMP) if f.endswith(".tmp")] == [])
+n0 = len(run.calls)
+check("zweiter Aufruf kurz danach: nichts", hd.apt_anstossen(PFAD, run) is False and len(run.calls) == n0)
+l = hd.apt_lage(NOW, run, lambda p: None, PFAD)
+check("apt_lage liest nur die Datei, startet kein apt",
+      (l["n"], l["sicher"], l["laeuft"]) == (4, 3, False) and sum(1 for c, _ in run.calls if "apt-get" in c) == 1)
+vor7 = time.time() - 7 * 3600
+d["versuch"] = vor7; hd.apt_speichern(PFAD, d)
+check("nach 7 Stunden noch nicht fällig", hd.apt_anstossen(PFAD, run) is False)
+d["versuch"] = time.time() - 8 * 3600 - 5; hd.apt_speichern(PFAD, d)
+check("nach 8 Stunden fällig → dreimal am Tag", hd.apt_anstossen(PFAD, run) is True and datei()["versuch"] > time.time() - 5)
+check("Zeit des Ergebnisses wird erneuert", abs(datei()["t"] - time.time()) < 5)
+
+# Fehlschlag: alte Zahl bleibt, früher wiederholen
+reset()
+hd.apt_speichern(PFAD, {"v": 1, "t": time.time() - 9 * 3600, "versuch": time.time() - 9 * 3600, "ok": True, "n": 7, "sicher": 1})
+bad = fake({"apt-get": None})
+hd.apt_anstossen(PFAD, bad)
+d = datei()
+check("Fehlschlag behält die alte Zahl und vermerkt den Versuch", (d["n"], d["sicher"], d["ok"]) == (7, 1, False) and d["versuch"] > time.time() - 5)
+check("nach einem Fehlschlag in 1 Stunde wieder dran, vorher nicht",
+      hd.apt_faellig(d, d["versuch"] + 3500) is False and hd.apt_faellig(d, d["versuch"] + 3700) is True)
+check("alte Zahl wird weiter angezeigt (kein „nicht ermittelt“)",
+      [x["text"] for x in hd.apt_zeilen(hd.apt_lage(NOW, bad, lambda p: None, PFAD))][0] == "Pi: 7 Updates (1 Sicherheit)")
+reset()
+hd.apt_anstossen(PFAD, bad)
+l = hd.apt_lage(NOW, bad, lambda p: None, PFAD)
+check("nie eine Zahl und Fehlschlag: „nicht ermittelt“ statt Schweigen",
+      l["n"] is None and l["fehler"] and [x["text"] for x in hd.apt_zeilen(l)] == ["Pi: Updates nicht ermittelt"])
+reset()
+check("Ausnahme in apt: Versuch trotzdem vermerkt, Sperre frei",
+      hd.apt_anstossen(PFAD, lambda cmd, timeout=3: (_ for _ in ()).throw(RuntimeError("x"))) is True
+      and not hd._apt_sperre.locked() and datei()["ok"] is False)
+
+# Zahl älter als 30 h → rote Zeile mit Datum
+reset()
+hd.apt_speichern(PFAD, {"v": 1, "t": time.time() - 40 * 3600, "versuch": time.time(), "ok": False, "n": 5, "sicher": 0})
+zl = [(x["text"], x["bad"]) for x in hd.apt_zeilen(hd.apt_lage(NOW, bad, lambda p: None, PFAD))]
+check("Zahl über 30 Stunden alt: Datum und Warnung", zl[0] == ("Pi: 5 Updates", False) and zl[-1][1] and zl[-1][0].startswith("Zahl vom "))
+
+# ------------------------------------------------------------------------------------------ Lesen beim Schreiben
+reset()
+hd.apt_speichern(PFAD, {"v": 1, "t": time.time(), "versuch": time.time(), "ok": True, "n": 4, "sicher": 3})
+check("gut gelesener Stand wird gemerkt", hd.apt_lesen(PFAD)["n"] == 4 and hd._apt_zuletzt["d"]["n"] == 4)
+
+with open(PFAD, "w") as f:                      # Datei „mitten im Schreiben“: abgeschnittenes JSON
+    f.write('{"v": 1, "n": 9, "sic')
+t0 = time.time()
+l = hd.apt_lesen(PFAD)
+check("halb geschriebene Datei: Rückfall auf den letzten guten Stand (nicht 9, kein Absturz)",
+      l is not None and l["n"] == 4)
+check("… nach kurzem Warten (Versuche × Pause), nicht endlos", 0.3 < time.time() - t0 < 2.5)
+
+with open(PFAD, "w") as f:                      # leere Datei (Moment nach dem Öffnen zum Schreiben)
+    pass
+check("leere Datei: ebenfalls letzter Stand", hd.apt_lesen(PFAD)["n"] == 4)
+
+with open(PFAD, "w") as f:
+    f.write('{"v": 1, "n": 9, "sic')
+def spaeter_fertig():
+    time.sleep(0.2)
+    hd.apt_speichern(PFAD, {"v": 1, "t": time.time(), "versuch": time.time(), "ok": True, "n": 11, "sicher": 2})
+th = threading.Thread(target=spaeter_fertig); th.start()
+l = hd.apt_lesen(PFAD)
+th.join()
+check("Leser wartet kurz und bekommt dann den neuen, vollständigen Stand (11)", l["n"] == 11)
 
 reset()
-bad = fake({"apt-get": None})
-hd.apt_lage(NOW, bad, lambda p: None)
-frist = hd._apt_gemerkt["bis"] - time.time()
-check("Fehlschlag wird früher wiederholt als ein Erfolg (10 statt 60 min)", 8 * 60 < frist <= 10 * 60 + 1)
-check("Fehlschlag lässt die Zahl unbekannt", hd.apt_lage(NOW, bad, lambda p: None)["n"] is None)
+with open(PFAD, "w") as f:
+    f.write("kein json")
+check("beschädigt und nie etwas gelesen: None, kein Absturz", hd.apt_lesen(PFAD) is None)
+check("… und die Zeile fehlt einfach (Hilfsbild bleibt brauchbar)", hd.pi_updates(NOW, fake({}), lambda p: None, PFAD) == [])
+reset()
+check("Datei fehlt: None", hd.apt_lesen(PFAD) is None)
+
+# Dauerprobe: Schreiber und Leser gleichzeitig – nie ein Fehler, nie eine halbe Datei
+reset()
+hd.apt_speichern(PFAD, {"v": 1, "t": 1.0, "versuch": 1.0, "ok": True, "n": 0, "sicher": 0})
+fertig = threading.Event()
+gelesen, kaputt_gesehen = [], []
+je_leser = []
+
+
+def schreiber():
+    for i in range(1, 300):
+        hd.apt_speichern(PFAD, {"v": 1, "t": float(i), "versuch": float(i), "ok": True, "n": i, "sicher": 0})
+    fertig.set()
+
+
+def leser():
+    eigene = []
+    je_leser.append(eigene)
+    while not fertig.is_set():
+        try:
+            with open(PFAD, encoding="utf-8") as f:
+                eigene.append(json.load(f)["n"])
+                gelesen.append(eigene[-1])
+        except Exception as e:  # noqa: BLE001
+            kaputt_gesehen.append(repr(e))
+
+
+ts = [threading.Thread(target=schreiber)] + [threading.Thread(target=leser) for _ in range(3)]
+[t.start() for t in ts]; [t.join() for t in ts]
+check(f"300 Schreibvorgänge gegen 3 Leser: {len(gelesen)} Lesungen ohne Fehler und halbe Datei",
+      not kaputt_gesehen and len(gelesen) > 50)
+check("gelesene Zahlen gehen je Leser nie rückwärts (nie ein älterer Stand nach einem neueren)",
+      all(a <= b for e in je_leser for a, b in zip(e, e[1:])))
+
+# ------------------------------------------------------------------------------------------ Hintergrund
+reset()
+hd.APT_HINTERGRUND = True
+tor, begonnen = threading.Event(), threading.Event()
+grundlauf = fake({"apt-get": APT, "uname": RPI, "ls": RPI, "find": vor(1)})
+
+
+def langsam(cmd, timeout=None):
+    if "apt-get" in cmd:
+        begonnen.set()
+        tor.wait(5)
+    return grundlauf(cmd, timeout)
+
+
+t0 = time.time()
+check("anstoßen kehrt sofort zurück", hd.apt_anstossen(PFAD, langsam) is True and time.time() - t0 < 1)
+begonnen.wait(2)
+l1 = hd.apt_lage(NOW, langsam, lambda p: None, PFAD)
+check("während der ersten Abfrage: „werden geprüft“, Zahl unbekannt",
+      l1["n"] is None and l1["laeuft"] is True and [x["text"] for x in hd.apt_zeilen(l1)] == ["Pi: Updates werden geprüft …"])
+check("zweites Anstoßen startet keine zweite Abfrage", hd.apt_anstossen(PFAD, langsam) is False)
+tor.set()
+warte_auf_ende()
+l3 = hd.apt_lage(NOW, langsam, lambda p: None, PFAD)
+check("danach steht die Zahl in der Datei und im Bild",
+      l3["n"] == 4 and not l3["laeuft"] and [x["text"] for x in hd.apt_zeilen(l3)][0] == "Pi: 4 Updates (3 Sicherheit)")
+
+d = datei(); d["versuch"] = time.time() - 9 * 3600; hd.apt_speichern(PFAD, d)
+tor.clear(); begonnen.clear()
+hd.apt_anstossen(PFAD, langsam)
+begonnen.wait(2)
+l4 = hd.apt_lage(NOW, langsam, lambda p: None, PFAD)
+check("beim Erneuern bleibt der alte Stand sichtbar", l4["n"] == 4 and l4["laeuft"] is True
+      and [x["text"] for x in hd.apt_zeilen(l4)][0] == "Pi: 4 Updates (3 Sicherheit)")
+tor.set()
+warte_auf_ende()
+
+check("Zeitgrenze 180 s, Intervall 8 h (dreimal am Tag)", hd.APT_TIMEOUT == 180 and hd.APT_INTERVALL_STD == 8 and 24 / hd.APT_INTERVALL_STD == 3)
+hd.APT_HINTERGRUND = False
+reset()
 
 # ------------------------------------------------------------------------------------------ Zusammenbau
 reset()
+hd.apt_speichern(PFAD, {"v": 1, "t": time.time(), "versuch": time.time(), "ok": True, "n": 4, "sicher": 3})
 run = fake({"apt-get": APT, "uname": RPI, "ls": f"{RPI}\n6.6.62+rpt-rpi-v8", "find": vor(1), "systemctl": None})
-sec = {s["key"]: s for s in hd.abschnitte(NOW, [], run=run, read=lambda p: None)}
+sec = {s["key"]: s for s in hd.abschnitte(NOW, [], run=run, read=lambda p: None, apt_datei=PFAD)}
 check("Abschnitt „Updates“ enthält die Pi-Zeilen auch ohne signierte Updates",
       [x["text"] for x in sec["updates"]["lines"]] == ["Pi: 4 Updates (3 Sicherheit)", "Neustart nötig (neuer Kernel)"])
 reset()
+hd.apt_speichern(PFAD, {"v": 1, "t": time.time(), "versuch": time.time(), "ok": True, "n": 0, "sicher": 0})
 info = {"eingerichtet": True, "installiert": {"version": "1.52", "wann": "Mi 3:40"}, "bereit": None, "fremd": False}
-sec = {s["key"]: s for s in hd.abschnitte(NOW, [], update_info=info, run=fake({"apt-get": APT_NULL}), read=lambda p: None)}
+sec = {s["key"]: s for s in hd.abschnitte(NOW, [], update_info=info, run=fake({}), read=lambda p: None, apt_datei=PFAD)}
 check("Pi-Zeilen stehen vor den Zeilen der signierten Updates",
       [x["text"] for x in sec["updates"]["lines"]][:2] == ["Pi: aktuell", "Installiert v1.52 · Mi 3:40"])
 reset()
@@ -150,9 +320,11 @@ def boom(cmd, timeout=3):
 
 
 reset()
-check("Fehler in run werfen nie", hd.pi_updates(NOW, boom, lambda p: None) == [])
+check("Fehler in run werfen nie", hd.pi_updates(NOW, boom, lambda p: None, PFAD) == [])
 reset()
-check("Programm ohne timeout-Argument (alte Attrappe) wirft nie", hd.pi_updates(NOW, lambda cmd: None, lambda p: None) == [])
+check("Programm ohne timeout-Argument (alte Attrappe) wirft nie", hd.pi_updates(NOW, lambda cmd: None, lambda p: None, PFAD) == [])
+check("anstoßen mit alter Attrappe wirft nie", hd.apt_anstossen(PFAD, lambda cmd: None) in (True, False))
+warte_auf_ende()
 
 print()
 print("ALLES OK" if not FAILED else f"{len(FAILED)} FEHLER: {FAILED}")

@@ -144,6 +144,8 @@ def main():
                          "berg (seit 1.43): Schnee nur oben, auch auf dem Ölberg → weiße Gipfel im Nachtbild")
     ap.add_argument("--pi", default="ok", choices=["ok", "ausfall", "warn", "viele", "leer"],
                     help="Tagesdashboard: Zustand des Pi in der Wochenvorschau simulieren (dev/mock_pi.py)")
+    ap.add_argument("--apt", default="keine", choices=["keine", "aktuell", "updates", "sicher", "alt"],
+                    help="Tagesdashboard: apt-Updates des Pi im Hilfsbild simulieren (dev/mock_apt.py, seit 1.53)")
     ap.add_argument("--hilfe", action="store_true",
                     help="Tagesdashboard: Hilfsbild der Tasten (Taste D, seit 1.49) statt des Dashboards; ohne --hilfe "
                          "liegt eine leere Zustandsdatei bereit, damit nie eine fremde aus /tmp mitspielt")
@@ -228,6 +230,8 @@ def main():
     if args.plugin == "tagesdashboard":
         import mock_pi  # Zustand des Pi immer simulieren (sonst stünde der Entwicklungsrechner im Bild)
         mock_pi.install(now, args.pi, __import__("plugins.tagesdashboard.pizustand", fromlist=["x"]))
+        import mock_apt  # apt-Lage des Pi immer simulieren (sonst stünden Kernel und Paketlisten des Entwicklungsrechners im Bild)
+        mock_apt.install(args.apt, __import__("plugins.tagesdashboard.hilfsdaten", fromlist=["x"]), now)
     if args.iss and args.iss != "echt" and args.plugin == "tagesdashboard":
         import mock_iss
         mock_iss.install(now, args.iss)
@@ -241,6 +245,7 @@ def main():
         if args.hilfe:
             with open(state_file, "w", encoding="utf-8") as f:
                 json.dump({"v": 1, "neu": 1, "hilfe_bis": now.timestamp() + hb.HILFE_SEKUNDEN}, f)
+            hb.note_draw(now - timedelta(minutes=12), now + timedelta(minutes=18), 30)  # „Zuletzt gezeichnet“ (seit 1.52)
         hb.state_path = lambda device_config: state_file
     cls = getattr(module, PLUGINS[args.plugin])
     cls.current_time = lambda self, tz: now.astimezone(tz)
@@ -283,6 +288,8 @@ def main():
         tag += f"_polar-{args.polar}"
     if args.pi != "ok":
         tag += f"_pi-{args.pi}"
+    if args.apt != "keine":
+        tag += f"_apt-{args.apt}"
     if args.nina != "keine":
         tag += f"_nina-{args.nina}"
     if args.lauf != "keine":

@@ -50,13 +50,14 @@ try:
     from . import (kleidung, bahn, nachrichten, waesche, ansichten, nachtgrafik, anfahrt, festtage, radar, luft,
                    katze, pollen, meteore, finsternisse, planeten, status, urlaub, wahlkampf, iss, ostereier, livestream,
                    pegel, pizustand, advent, zielort, laufen, glaette, polarlicht, nina, wochenlast, laufbilanz, monat,
-                   xkcd, klima, schnee, freigabe, feierabend, hilfsbild)
+                   xkcd, klima, schnee, freigabe, feierabend, hilfsbild, hilfsdaten)
 except ImportError:  # pragma: no cover
     from plugins.tagesdashboard import (kleidung, bahn, nachrichten, waesche, ansichten, nachtgrafik, anfahrt,
                                         festtage, radar, luft, katze, pollen, meteore, finsternisse, planeten,
                                         status, urlaub, wahlkampf, iss, ostereier, livestream, pegel, pizustand, advent,
                                         zielort, laufen, glaette, polarlicht, nina, wochenlast,
-                                        laufbilanz, monat, xkcd, klima, schnee, freigabe, feierabend, hilfsbild)
+                                        laufbilanz, monat, xkcd, klima, schnee, freigabe, feierabend, hilfsbild,
+                                        hilfsdaten)
 
 # Wahlurne (Stimmzettel mit Kreuz steckt im Schlitz)
 WAHL_ICON = ('<svg class="{cls}" viewBox="0 0 32 32" aria-hidden="true">'
@@ -433,7 +434,7 @@ class Tagesdashboard(BasePlugin):
             hilfe_an = False
             logger.exception("Zustand der Tasten konnte nicht gelesen werden")
         if hilfe_an:
-            return self.hilfe_image(settings, device_config, now, dimensions, night_win, flag)
+            return self.hilfe_image(settings, device_config, now, dimensions, night_win, flag, week_win, month_win)
         if tasten_frisch:
             logger.info("Tasten: neu gezeichnet, Bild-Caches übersprungen")
         forced = tasten_frisch or self._manual_refresh()  # „Jetzt aktualisieren“ oder Taste A: nie den Cache nutzen
@@ -896,9 +897,34 @@ class Tagesdashboard(BasePlugin):
             _IMAGE_CACHE.clear()  # nur ein Bild merken (Speicher auf dem Pi Zero)
             _IMAGE_CACHE[cache_key] = {"image": image.copy(), "quiet": quiet_until, "edge": edge,
                                        "made": now.strftime("%H:%M"), "warn": warn_sig}
+        self.note_draw(now, mode, use_cache, flag, cache_key, quiet_until if use_cache else None,
+                       edge if use_cache else None, device_config)
         return image
 
-    def hilfe_image(self, settings, device_config, now, dimensions, night_win, flag):
+    @staticmethod
+    def note_draw(now, mode, use_cache, flag, cache_key, quiet_until, edge, device_config):
+        """Merkt fürs Hilfsbild (seit 1.51), wann das Dashboard wirklich gezeichnet hat und wann es das nächste Mal
+        neu zeichnet – nicht InkyPis Takt (der zählt jeden Aufruf, auch die aus dem Bild-Cache).
+        Nachtbild: bis zum Ende der Nacht (bzw. zur nächsten Stunde der lebenden Stadt), kein fester Abstand.
+        Mit Cache: das Ende von „Alle … min neu zeichnen“ oder die nächste Fenstergrenze, was früher kommt.
+        Im Zugfenster (kein Cache) zeichnet jeder Aufruf neu, also im Takt von InkyPi."""
+        try:
+            next_at, every = None, None
+            night = _NIGHT_CACHE.get(cache_key) if mode == "night" and flag("nightFreeze") else None
+            if night:
+                next_at = night["until"]
+            elif use_cache:
+                next_at = min((t for t in (quiet_until, edge) if t), default=None)
+                every = round((quiet_until - now).total_seconds() / 60)
+            else:
+                takt = cycle_seconds(device_config)
+                if takt:
+                    next_at, every = now + timedelta(seconds=takt), round(takt / 60)
+            hilfsbild.note_draw(now, next_at, every)
+        except Exception:  # Zusatz fürs Hilfsbild – nie das Bild kosten
+            logger.exception("Zeichenvorgang fürs Hilfsbild nicht gemerkt")
+
+    def hilfe_image(self, settings, device_config, now, dimensions, night_win, flag, week_win=None, month_win=None):
         """Hilfsbild (seit 1.49, Taste D): Belegung der Tasten, Version, Zustand des Pi. Ohne Datenabrufe, geht
         deshalb schnell; weder im Bild-Cache noch in der Statusanzeige (die Ansicht ist keine Datenrunde)."""
         try:
@@ -906,8 +932,19 @@ class Tagesdashboard(BasePlugin):
         except Exception:  # Zusatz: das Hilfsbild braucht den Pi-Zustand nicht
             pi_parts = []
             logger.exception("Zustand des Pi konnte für das Hilfsbild nicht gelesen werden")
+        hilfe = hilfsbild.build(self.config.get("version"), now, pi_parts, hilfsbild.night_text(night_win))
+        try:  # Zusatzdaten (seit 1.50): Zugang mit QR-Code, Zeichnen, Updates, Quellen, Netz, Dienste, Fehler
+            hilfe["zugang"] = hilfsdaten.zugang_mit_qr(hilfsdaten.zugang())
+            hilfe["abschnitte"] = hilfsdaten.abschnitte(
+                now, hilfe["pi"], draw=hilfsbild.last_draw(),
+                update_info=freigabe.status(self.config.get("version")), status_snapshot=status.snapshot(),
+                night_win=night_win, week_win=week_win, month_win=month_win, week_day=WEEK_DAY)
+        except Exception:  # das Hilfsbild bleibt auch ohne diese Zeilen brauchbar
+            logger.exception("Zusatzdaten fürs Hilfsbild nicht gelesen")
+            hilfe.setdefault("zugang", None)
+            hilfe.setdefault("abschnitte", [])
         params = {
-            "hilfe": hilfsbild.build(self.config.get("version"), now, pi_parts, hilfsbild.night_text(night_win)),
+            "hilfe": hilfe,
             "orientation": "portrait" if dimensions[1] > dimensions[0] else "landscape",
             "plugin_settings": settings,
         }
@@ -938,6 +975,7 @@ class Tagesdashboard(BasePlugin):
             logger.exception("Lebende Stadt: Nachtbild konnte nicht aufgefrischt werden")
             return None
         hit.update(image=image.copy(), until=min(hit["end"], nachtgrafik.next_change(now)))
+        hilfsbild.note_draw(now, hit["until"])  # echter Zeichenvorgang fürs Hilfsbild (seit 1.51)
         logger.info("Lebende Stadt: Nachtbild für %s Uhr (Daten von %s, bis %s)", now.strftime("%H"), hit["made"],
                     hit["until"].strftime("%H:%M"))
         return image

@@ -144,6 +144,9 @@ def main():
                          "berg (seit 1.43): Schnee nur oben, auch auf dem Ölberg → weiße Gipfel im Nachtbild")
     ap.add_argument("--pi", default="ok", choices=["ok", "ausfall", "warn", "viele", "leer"],
                     help="Tagesdashboard: Zustand des Pi in der Wochenvorschau simulieren (dev/mock_pi.py)")
+    ap.add_argument("--hilfe", action="store_true",
+                    help="Tagesdashboard: Hilfsbild der Tasten (Taste D, seit 1.49) statt des Dashboards; ohne --hilfe "
+                         "liegt eine leere Zustandsdatei bereit, damit nie eine fremde aus /tmp mitspielt")
     ap.add_argument("--display", default="inky", choices=["inky", "mock"])
     ap.add_argument("--font", default="eink", choices=["eink", "mono", "aa"])
     ap.add_argument("--inky-saturation", type=float, default=0.5)
@@ -228,9 +231,22 @@ def main():
     if args.iss and args.iss != "echt" and args.plugin == "tagesdashboard":
         import mock_iss
         mock_iss.install(now, args.iss)
+    if args.plugin == "tagesdashboard":
+        # Tasten (seit 1.49): Zustandsdatei immer in einem frischen Temp-Ordner, nie eine fremde aus /tmp
+        import json
+        import tempfile
+        hb = __import__("plugins.tagesdashboard.hilfsbild", fromlist=["x"])
+        hb.reset()
+        state_file = os.path.join(tempfile.mkdtemp(prefix="inkypi-tasten-"), hb.STATE_FILE)
+        if args.hilfe:
+            with open(state_file, "w", encoding="utf-8") as f:
+                json.dump({"v": 1, "neu": 1, "hilfe_bis": now.timestamp() + hb.HILFE_SEKUNDEN}, f)
+        hb.state_path = lambda device_config: state_file
     cls = getattr(module, PLUGINS[args.plugin])
     cls.current_time = lambda self, tz: now.astimezone(tz)
-    plugin = cls({"id": args.plugin})
+    info = REPO / args.plugin / "plugin-info.json"  # InkyPi gibt dem Plugin diese Datei als Konfiguration mit
+    plugin = cls({"id": args.plugin, "version": __import__("json").loads(info.read_text("utf-8")).get("version")}
+                 if info.exists() else {"id": args.plugin})
     if args.seit and args.plugin == "tagesdashboard":
         # Statusanzeige: Ausfälle, die in dieser Runde beginnen, auf die gewünschte Uhrzeit zurückdatieren
         status = __import__("plugins.tagesdashboard.status", fromlist=["x"])
@@ -273,6 +289,8 @@ def main():
         tag += f"_lauf-{args.lauf}"
     if args.xkcd != "normal":
         tag += f"_xkcd-{args.xkcd}"
+    if args.hilfe:
+        tag += "_hilfe"
     if args.seit:
         tag += f"_seit-{args.seit.replace(':', '').replace('gestern ', 'g')}"
     if args.display == "mock" or args.font != "eink":

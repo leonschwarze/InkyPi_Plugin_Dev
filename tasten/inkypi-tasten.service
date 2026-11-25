@@ -1,0 +1,16 @@
+[Unit]
+Description=InkyPi-Tasten: die Tasten A bis D des Inky Impression (A neu zeichnen, D Hilfsbild)
+# Der Dienst fasst das Display nie an, er ruft nur InkyPis Weboberfläche auf. Er soll deshalb erst nach InkyPi
+# starten; läuft InkyPi gerade nicht, wird ein Tastendruck protokolliert und verworfen.
+After=inkypi.service
+
+[Service]
+Type=simple
+ExecStart=/usr/local/inkypi/venv_inkypi/bin/python -u /usr/local/inkypi-tasten/tasten.py
+Restart=on-failure
+RestartSec=10
+# Ein Auftrag wartet bis zu vier Minuten auf das Display; beim Stoppen darf das nicht den Neustart aufhalten
+TimeoutStopSec=10
+
+[Install]
+WantedBy=multi-user.target
